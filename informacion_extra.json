@@ -1,0 +1,84 @@
+{
+    "project_name": "MTG-Nexus-Hub",
+    "version": "1.0.0",
+    "description": "Plataforma integral para jugadores, coleccionistas y vendedores de Magic: The Gathering con gestión de mazos, escaneo OCR y tablero virtual manual.",
+    "tech_stack": {
+        "frontend": "React.js (Tailwind CSS, Lucide Icons)",
+        "backend": "Node.js (Express)",
+        "database": "PostgreSQL (Prisma ORM) por su robustez con datos relacionales",
+        "realtime": "WebSockets (Socket.io) para el tablero manual",
+        "apis": {
+            "cards_data": "Scryfall API (Datos y precios de Cardmarket integrados)",
+            "scanning": "Tesseract.js (OCR para identificación de nombres de cartas)"
+        }
+    },
+    "product_roadmap": [
+        {
+            "release": "v1.0 - MVP Core",
+            "features": [
+                "Buscador Scryfall",
+                "Creador de mazos",
+                "Autenticación básica",
+                "Importación/Exportación .txt"
+            ]
+        },
+        {
+            "release": "v2.0 - Inventory & Scan",
+            "features": [
+                "Escaneo por cámara (OCR)",
+                "Gestión de colección personal",
+                "Sincronización de precios Cardmarket (via Scryfall)"
+            ]
+        },
+        {
+            "release": "v3.0 - Playroom",
+            "features": [
+                "Tablero virtual manual",
+                "Salas multijugador via WebSockets",
+                "Contador de vida y estados"
+            ]
+        }
+    ],
+    "user_stories": [
+        {
+            "role": "Jugador",
+            "stories": [
+                "Como jugador, quiero buscar cartas por nombre, color o rareza para añadirlas a mi mazo.",
+                "Como jugador, quiero importar listas de mazos desde archivos de texto para ahorrar tiempo.",
+                "Como jugador, quiero un tablero manual donde pueda mover mis cartas y girarlas (tap) para jugar contra amigos online.",
+                "Como jugador, quiero poder lanzar dados y contar vidas de forma compartida en la sala de juego.",
+                "Como jugador, quiero ver la legalidad de mi mazo en formatos como Commander o Standard.",
+                "Como jugador, quiero simular una 'mano inicial' para probar la consistencia de mi mazo.",
+                "Como jugador, quiero una sala de chat básica dentro de la partida para comunicarme con mi oponente."
+            ]
+        },
+        {
+            "role": "Coleccionista",
+            "stories": [
+                "Como coleccionista, quiero usar la cámara de mi móvil/PC para identificar una carta física y añadirla a mi inventario.",
+                "Como coleccionista, quiero ver el valor total estimado de mi colección basado en precios de Cardmarket.",
+                "Como coleccionista, quiero organizar mis cartas por carpetas o cajas virtuales.",
+                "Como coleccionista, quiero marcar cartas como 'Foil' o 'Special Art' para que el precio sea preciso.",
+                "Como coleccionista, quiero recibir alertas si una carta de mi inventario sube significativamente de precio.",
+                "Como coleccionista, quiero exportar mi colección a un CSV para tener un respaldo externo.",
+                "Como coleccionista, quiero ver estadísticas visuales (gráficos) de la distribución de colores de mi colección."
+            ]
+        },
+        {
+            "role": "Vendedor",
+            "stories": [
+                "Como vendedor, quiero listar cartas que tengo repetidas para ofrecerlas en intercambio o venta.",
+                "Como vendedor, quiero ver la tendencia de precio de los últimos 7 días de una carta específica.",
+                "Como vendedor, quiero generar una URL pública de mi inventario para compartirla con posibles compradores.",
+                "Como vendedor, quiero comparar el precio 'Euro' de Cardmarket con el precio 'USD' de TCGPlayer de un vistazo.",
+                "Como vendedor, quiero poder filtrar mis cartas más caras para priorizar su protección y venta.",
+                "Como vendedor, quiero ver qué cartas de mi inventario tienen más demanda (popularidad en Scryfall)."
+            ]
+        }
+    ],
+    "technical_constraints": {
+        "pricing_source": "Usar el campo 'prices.eur' y 'prices.cardmarket_id' de la API de Scryfall (Gratuito y estable).",
+        "multiplayer_logic": "Estado del tablero sincronizado mediante eventos de Socket.io (no automatizar reglas de juego en el MVP).",
+        "ocr_strategy": "Capturar frame de video, pre-procesar con filtros de contraste en Canvas y pasar a Tesseract.js para detectar el título de la carta."
+    }
+}

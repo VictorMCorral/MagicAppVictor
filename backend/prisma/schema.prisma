@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODELO DE USUARIO
+// ============================================
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  username  String   @unique
+  password  String   // Hash bcrypt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  decks     Deck[]
+
+  @@map("users")
+}
+
+// ============================================
+// MODELO DE MAZO
+// ============================================
+model Deck {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  format      String?  // Commander, Standard, Modern, etc.
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cards       DeckCard[]
+
+  @@index([userId])
+  @@map("decks")
+}
+
+// ============================================
+// MODELO DE CARTA EN MAZO (Relación Many-to-Many)
+// ============================================
+model DeckCard {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(1) // Cantidad de esta carta en el mazo
+  
+  // Información de la carta (cache de Scryfall)
+  scryfallId    String   // ID de Scryfall
+  name          String
+  manaCost      String?
+  type          String
+  rarity        String
+  setCode       String   // Código de la expansión (ej: "ONE")
+  setName       String
+  imageUrl      String?
+  oracleText    String?  @db.Text
+  colors        String[] // Array de colores ["W", "U", "B", "R", "G"]
+  cmc           Float    @default(0) // Converted Mana Cost
+  
+  // Precios (desde Scryfall)
+  priceEur      Float?
+  priceUsd      Float?
+  
+  createdAt DateTime @default(now())
+  
+  // Relaciones
+  deckId    String
+  deck      Deck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+
+  @@unique([deckId, scryfallId]) // No permitir duplicados de la misma carta en un mazo
+  @@index([deckId])
+  @@map("deck_cards")
+}
