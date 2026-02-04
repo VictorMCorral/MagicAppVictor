@@ -43,3 +43,41 @@ code {
     @apply rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer;
   }
 }
+
+/* Estilos adicionales para cartas MTG */
+.mtg-card img {
+  @apply w-full h-auto object-cover;
+}
+
+.aspect-card {
+  aspect-ratio: 63 / 88;
+}
+
+/* Animación de carga */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Efecto de brillo en hover */
+.mtg-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: left 0.5s ease;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.mtg-card:hover::before {
+  left: 100%;
+}

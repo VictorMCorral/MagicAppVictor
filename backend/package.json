@@ -8,9 +8,15 @@
     "dev": "nodemon src/server.js",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
-    "prisma:studio": "npx prisma studio"
+    "prisma:studio": "npx prisma studio",
+    "test": "jest --detectOpenHandles"
   },
-  "keywords": ["mtg", "magic-the-gathering", "deck-builder", "scryfall"],
+  "keywords": [
+    "mtg",
+    "magic-the-gathering",
+    "deck-builder",
+    "scryfall"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -24,7 +30,9 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "jest": "^30.2.0",
     "nodemon": "^3.0.3",
-    "prisma": "^5.9.1"
+    "prisma": "^5.9.1",
+    "supertest": "^7.2.2"
   }
 }

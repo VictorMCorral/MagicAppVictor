@@ -52,65 +52,88 @@ const CardSearchPage = () => {
       {/* Resultados */}
       {loading ? (
         <div className="text-center py-12">
-          <div className="text-xl">Buscando cartas...</div>
+          <div className="animate-spin inline-block">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+          </div>
+          <p className="text-xl mt-4 text-gray-600">Buscando cartas...</p>
         </div>
       ) : cards.length > 0 ? (
         <>
-          <p className="text-gray-600 mb-4">{cards.length} cartas encontradas</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <p className="text-gray-600 mb-6 text-lg font-semibold">
+            {cards.length} {cards.length === 1 ? 'carta encontrada' : 'cartas encontradas'}
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {cards.map((card) => (
-              <CardDisplay
-                key={card.id}
-                card={card}
-                onClick={() => setSelectedCard(card)}
-              />
+              <div key={card.id} onClick={() => setSelectedCard(card)}>
+                <CardDisplay card={card} />
+              </div>
             ))}
           </div>
         </>
       ) : query && !loading ? (
         <div className="card text-center py-12">
-          <p className="text-gray-600">No se encontraron cartas</p>
+          <p className="text-gray-600 text-lg">No se encontraron cartas para "{query}"</p>
+          <p className="text-gray-500 mt-2">Intenta con otro nombre o criterio de búsqueda</p>
         </div>
       ) : null}
 
       {/* Modal de detalle */}
       {selectedCard && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
           onClick={() => setSelectedCard(null)}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-y-auto"
+            className="bg-white rounded-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col lg:flex-row gap-8">
               {selectedCard.image_uris?.normal && (
-                <img
-                  src={selectedCard.image_uris.normal}
-                  alt={selectedCard.name}
-                  className="w-full md:w-1/2 rounded-lg"
-                />
+                <div className="lg:w-1/2 flex-shrink-0">
+                  <img
+                    src={selectedCard.image_uris.normal}
+                    alt={selectedCard.name}
+                    className="w-full rounded-lg shadow-lg"
+                  />
+                </div>
               )}
               <div className="flex-1">
-                <h2 className="text-2xl font-bold mb-2">{selectedCard.name}</h2>
-                <p className="text-gray-600 mb-2">{selectedCard.type_line}</p>
-                <p className="text-gray-600 mb-4">{selectedCard.mana_cost}</p>
+                <h2 className="text-3xl font-bold mb-2 text-gray-900">{selectedCard.name}</h2>
+                <p className="text-lg text-gray-700 font-semibold mb-1">{selectedCard.type_line}</p>
+                <p className="text-lg text-gray-600 mb-6">{selectedCard.mana_cost}</p>
                 
                 {selectedCard.oracle_text && (
-                  <p className="text-gray-800 mb-4">{selectedCard.oracle_text}</p>
+                  <div className="bg-gray-50 p-4 rounded-lg mb-6 border-l-4 border-blue-600">
+                    <p className="text-gray-800">{selectedCard.oracle_text}</p>
+                  </div>
                 )}
 
-                <div className="space-y-2 text-sm">
-                  <p><strong>Set:</strong> {selectedCard.set_name}</p>
-                  <p><strong>Rareza:</strong> {selectedCard.rarity}</p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <p className="text-gray-600 text-sm"><strong>Set:</strong></p>
+                    <p className="text-gray-900">{selectedCard.set_name}</p>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded-lg">
+                    <p className="text-gray-600 text-sm"><strong>Rareza:</strong></p>
+                    <p className="text-gray-900 capitalize">{selectedCard.rarity}</p>
+                  </div>
                   {selectedCard.prices?.eur && (
-                    <p><strong>Precio:</strong> €{selectedCard.prices.eur}</p>
+                    <div className="bg-green-50 p-3 rounded-lg">
+                      <p className="text-gray-600 text-sm"><strong>Precio:</strong></p>
+                      <p className="text-green-600 font-bold text-lg">€{parseFloat(selectedCard.prices.eur).toFixed(2)}</p>
+                    </div>
+                  )}
+                  {selectedCard.power && selectedCard.toughness && (
+                    <div className="bg-red-50 p-3 rounded-lg">
+                      <p className="text-gray-600 text-sm"><strong>P/T:</strong></p>
+                      <p className="text-gray-900 text-lg font-bold">{selectedCard.power}/{selectedCard.toughness}</p>
+                    </div>
                   )}
                 </div>
 
                 <button
                   onClick={() => setSelectedCard(null)}
-                  className="btn-secondary w-full mt-6"
+                  className="btn-secondary w-full"
                 >
                   Cerrar
                 </button>
