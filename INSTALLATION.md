@@ -148,6 +148,53 @@ REACT_APP_API_URL=http://localhost:5000/api
 - `POST /api/decks/:id/import` - Importar desde .txt
 - `GET /api/decks/:id/export` - Exportar a .txt
 
+---
+
+## 🚀 Despliegue en Servidor (Ubuntu)
+
+Para desplegar la aplicación en un servidor Ubuntu de forma automatizada, se ha incluido un script que configura todo el entorno necesario (Docker, Docker Compose, variables de entorno) y levanta los servicios.
+
+### Pasos para el despliegue:
+
+1. **Subir el código al servidor**:
+   Clona el repositorio en tu servidor Ubuntu.
+   ```bash
+   git clone <url-del-repositorio>
+   cd MagicApp
+   ```
+
+2. **Dar permisos de ejecución al script**:
+   ```bash
+   chmod +x ubuntu-deploy.sh
+   ```
+
+3. **Ejecutar el script**:
+   ```bash
+   ./ubuntu-deploy.sh
+   ```
+
+### ¿Qué hace este script?
+- Instala **Node.js (v18)**, **PostgreSQL**, **Nginx** y **PM2**.
+- Hace un `git pull` para obtener los últimos cambios.
+- Crea la base de datos y un usuario dedicado con credenciales aleatorias.
+- Genera archivos `.env` automáticamente para Backend y Frontend.
+- Construye el Frontend de React para producción.
+- Configura Nginx para servir el Frontend y actuar como proxy para la API.
+- Gestiona el proceso del Backend con PM2 para asegurar que se reinicie automáticamente.
+
+## ⚡ Automatización Remota desde Windows
+
+Para automatizar todo el proceso (conectar, actualizar y desplegar) desde tu ordenador actual a tu servidor (`192.168.5.41`):
+
+1. Abre una terminal de PowerShell en la raíz del proyecto.
+2. Ejecuta:
+   ```powershell
+   .\deploy-remote.ps1
+   ```
+   *Nota: Se asume que tienes configurado el acceso SSH con una llave privada para evitar pedir contraseña, o que la introducirás cuando lo solicite.*
+
+**Nota**: Una vez finalizado, la aplicación estará disponible en `http://192.168.5.41`.
+
 ## 🐛 Solución de Problemas
 
 ### Error: "Cannot connect to database"

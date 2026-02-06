@@ -1,0 +1,24 @@
+# Script de Despliegue Remoto para MagicApp
+# Ejecuta este script desde tu PC local para actualizar el servidor
+
+$SERVER_IP = "192.168.5.41"
+$SERVER_USER = "diego" # Cámbialo si tu usuario es distinto
+$REMOTE_PATH = "~/MagicAppVictor" # Ruta donde está el proyecto en el servidor
+
+Write-Host "----------------------------------------------------" -ForegroundColor Cyan
+Write-Host "🚀 Iniciando actualización remota en $SERVER_IP" -ForegroundColor Green
+Write-Host "----------------------------------------------------" -ForegroundColor Cyan
+
+# Comando a ejecutar en el servidor
+$REMOTE_COMMAND = "cd $REMOTE_PATH && chmod +x ubuntu-deploy.sh && ./ubuntu-deploy.sh $SERVER_IP"
+
+# Ejecutar vía SSH
+ssh "$SERVER_USER@$SERVER_IP" "$REMOTE_COMMAND"
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "`n✅ ¡Despliegue completado con éxito!" -ForegroundColor Green
+    Write-Host "📡 Accede en: http://$SERVER_IP" -ForegroundColor Cyan
+} else {
+    Write-Host "`n❌ Error en el despliegue remoto. Revisa la conexión SSH." -ForegroundColor Red
+}
+Write-Host "----------------------------------------------------" -ForegroundColor Cyan

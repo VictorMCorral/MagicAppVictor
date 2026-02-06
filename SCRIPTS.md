@@ -384,3 +384,39 @@ Write-Host "✅ Backup creado: $filename" -ForegroundColor Green
 ---
 
 **Nota:** Todos estos scripts son opcionales pero facilitan enormemente el desarrollo diario.
+
+---
+
+## 🌎 Despliegue en Producción
+
+### Ubuntu Auto-Deploy (Manual - Sin Docker)
+Usa el script `ubuntu-deploy.sh` para desplegar la aplicación directamente sobre el sistema operativo Ubuntu.
+
+**Características:**
+- Instalación de stack completo: Node.js 18, PostgreSQL, Nginx, PM2.
+- Configuración automática de base de datos y usuarios.
+- Detección de IP pública para configuración de CORS y API URL.
+- Nginx configurado como servidor web y Proxy Inverso.
+- Backend gestionado por PM2 (autostart habilitado).
+
+**Ejecución:**
+```bash
+chmod +x ubuntu-deploy.sh
+./ubuntu-deploy.sh
+```
+
+### Automatización Remota (Windows -> Ubuntu)
+Si despliegas desde tu PC local a un servidor con la IP fija `192.168.5.41`, usa el script de PowerShell:
+
+**Script:** `deploy-remote.ps1`
+
+**Lo que hace:**
+1. Se conecta mediante SSH al servidor.
+2. Entra en la carpeta del proyecto.
+3. Ejecuta el script de despliegue pasando la IP correcta.
+4. El servidor descarga los cambios de Git, reinstala dependencias si es necesario, migra la base de datos y reinicia los servicios.
+
+**Uso:**
+```powershell
+.\deploy-remote.ps1
+```
