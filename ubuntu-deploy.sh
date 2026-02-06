@@ -66,11 +66,13 @@ APP_PATH=$(pwd)
 # Gestionar credenciales persistentes para evitar cambios en cada despliegue
 if [ -f "$APP_PATH/backend/.env" ]; then
     echo "📄 Recuperando credenciales existentes del archivo .env..."
-    DB_PASS=$(grep DATABASE_URL "$APP_PATH/backend/.env" | sed -e 's/.*:\(.*\)@.*/\1/')
+    # Extracción segura: busca lo que hay entre el segundo ':' y el primer '@' de la DATABASE_URL
+    DB_PASS=$(grep DATABASE_URL "$APP_PATH/backend/.env" | sed -e 's/.*:\/\/.*:\(.*\)@.*/\1/')
     JWT_SECRET=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'"' -f2)
 else
     echo "🔑 Generando nuevas credenciales..."
-    DB_PASS=$(openssl rand -base64 12 | tr -d '/+')
+    # Generar contraseña solo con caracteres alfanuméricos para evitar errores en URL de Prisma
+    DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
     JWT_SECRET=$(openssl rand -base64 32)
 fi
 
