@@ -2,18 +2,25 @@
 # Ejecuta este script desde tu PC local para actualizar el servidor
 
 $SERVER_IP = "192.168.5.41"
-$SERVER_USER = "diego" # Cámbialo si tu usuario es distinto
-$REMOTE_PATH = "~/MagicAppVictor" # Ruta donde está el proyecto en el servidor
+$SERVER_USER = "victor" # Actualizado
+$REMOTE_PATH = "~/MagicApp"
+$PASSWORD = "Prieto*2" # Contraseña automatizada
 
 Write-Host "----------------------------------------------------" -ForegroundColor Cyan
 Write-Host "🚀 Iniciando actualización remota en $SERVER_IP" -ForegroundColor Green
 Write-Host "----------------------------------------------------" -ForegroundColor Cyan
 
-# Comando a ejecutar en el servidor
-$REMOTE_COMMAND = "cd $REMOTE_PATH && chmod +x ubuntu-deploy.sh && ./ubuntu-deploy.sh $SERVER_IP"
+# Instalar sshpass si no está disponible (opcional, pero mejor usar la contraseña directamente en el comando si es posible)
+# En Windows, lo más sencillo es usar una variable de entorno para la contraseña o enviarla al comando
 
-# Ejecutar vía SSH
-ssh "$SERVER_USER@$SERVER_IP" "$REMOTE_COMMAND"
+# Comando a ejecutar incluyendo el paso de la contraseña al sudo mediante el script de ubuntu
+$REMOTE_COMMAND = "cd $REMOTE_PATH && git pull origin main && chmod +x ubuntu-deploy.sh && echo '$PASSWORD' | sudo -S ./ubuntu-deploy.sh $SERVER_IP '$PASSWORD'"
+
+# Ejecutar vía SSH (se recomienda instalar la clave SSH para evitar pedir pas de ssh, 
+# pero aquí intentamos automatizarlo con la contraseña proporcionada)
+# Nota: ssh nativo de Windows no soporta pasar contraseña por parámetro fácilmente sin herramientas como sshpass o PuTTY.
+# Se asume que el usuario tiene la clave SSH configurada o que la escribirá una vez para la conexión inicial.
+ssh -t "$SERVER_USER@$SERVER_IP" "$REMOTE_COMMAND"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`n✅ ¡Despliegue completado con éxito!" -ForegroundColor Green

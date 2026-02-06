@@ -51,11 +51,12 @@ echo "✅ Nginx y PM2 instalados."
 # 6. Configurar variables de entorno y Base de Datos
 echo "⚙️ Configurando variables de entorno y base de datos..."
 
-# Usar IP especificada o detectar IP local/pública
-if [ "$1" != "" ]; then
-    IP_PUBLICA="$1"
-else
-    IP_PUBLICA=$(hostname -I | awk '{print $1}') # Prefiere la IP de la red local
+# Parámetros
+IP_PUBLICA="$1"
+SUDO_PASS="$2"
+
+if [ -z "$IP_PUBLICA" ]; then
+    IP_PUBLICA=$(hostname -I | awk '{print $1}')
 fi
 
 echo "📍 Usando IP: $IP_PUBLICA"
@@ -63,34 +64,18 @@ DB_NAME="mtg_nexus"
 DB_USER="mtg_user"
 APP_PATH=$(pwd)
 
-# Gestionar credenciales persistentes para evitar cambios en cada despliegue
+# Definimos una contraseña FIJA para la DB para eliminar errores P1000/P1013 definitivamente
+DB_PASS="MagicApp2026"
+JWT_SECRET=$(openssl rand -base64 32)
+
+# Si existe un .env, intentamos mantener el JWT_SECRET
 if [ -f "$APP_PATH/backend/.env" ]; then
-    echo "📄 Intentando recuperar credenciales existentes..."
-    # Limpiamos posibles comillas y espacios
-    DB_URL_LINE=$(grep DATABASE_URL "$APP_PATH/backend/.env" | tr -d '"' | tr -d "'")
-    # Extraemos lo que hay entre el ":" del usuario y el "@" del host
-    EXTRACTED_PASS=$(echo "$DB_URL_LINE" | sed -n 's/.*:\/\/.*:\(.*\)@.*/\1/p')
-    EXTRACTED_JWT=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
-    
-    # Validación: Si la contraseña extraída parece corrupta (vacía o contiene @ o :), forzamos regeneración
-    if [[ -z "$EXTRACTED_PASS" || "$EXTRACTED_PASS" == *"@"* || "$EXTRACTED_PASS" == *":"* ]]; then
-        echo "⚠️ Credenciales corruptas detectadas en .env. Regenerando..."
-        DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
-        JWT_SECRET=$(openssl rand -base64 32)
-    else
-        DB_PASS=$EXTRACTED_PASS
-        JWT_SECRET=$EXTRACTED_JWT
-        echo "✅ Credenciales recuperadas correctamente."
-    fi
-else
-    echo "🔑 Generando nuevas credenciales iniciales..."
-    DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
-    JWT_SECRET=$(openssl rand -base64 32)
+    JWT_SECRET=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
 fi
 
-# Crear base de datos y usuario si no existen
-echo "🐘 Asegurando base de datos y permisos..."
-sudo -u postgres psql <<PSQL
+# Crear base de datos y usuario
+echo "🐘 Asegurando base de datos y permisos con sudo automatizado..."
+echo "$SUDO_PASS" | sudo -S -u postgres psql <<PSQL
 DO \$\$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '$DB_USER') THEN
@@ -100,10 +85,10 @@ BEGIN
     END IF;
 END
 \$\$;
+GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 PSQL
 
-sudo -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+echo "$SUDO_PASS" | sudo -S -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || echo "$SUDO_PASS" | sudo -S -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
 
 # 7. Configurar Backend
 echo "🏗️ Configurando Backend..."
