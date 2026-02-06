@@ -65,13 +65,25 @@ APP_PATH=$(pwd)
 
 # Gestionar credenciales persistentes para evitar cambios en cada despliegue
 if [ -f "$APP_PATH/backend/.env" ]; then
-    echo "📄 Recuperando credenciales existentes del archivo .env..."
-    # Extracción segura: busca lo que hay entre el segundo ':' y el primer '@' de la DATABASE_URL
-    DB_PASS=$(grep DATABASE_URL "$APP_PATH/backend/.env" | sed -e 's/.*:\/\/.*:\(.*\)@.*/\1/')
-    JWT_SECRET=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'"' -f2)
+    echo "📄 Intentando recuperar credenciales existentes..."
+    # Limpiamos posibles comillas y espacios
+    DB_URL_LINE=$(grep DATABASE_URL "$APP_PATH/backend/.env" | tr -d '"' | tr -d "'")
+    # Extraemos lo que hay entre el ":" del usuario y el "@" del host
+    EXTRACTED_PASS=$(echo "$DB_URL_LINE" | sed -n 's/.*:\/\/.*:\(.*\)@.*/\1/p')
+    EXTRACTED_JWT=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    
+    # Validación: Si la contraseña extraída parece corrupta (vacía o contiene @ o :), forzamos regeneración
+    if [[ -z "$EXTRACTED_PASS" || "$EXTRACTED_PASS" == *"@"* || "$EXTRACTED_PASS" == *":"* ]]; then
+        echo "⚠️ Credenciales corruptas detectadas en .env. Regenerando..."
+        DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
+        JWT_SECRET=$(openssl rand -base64 32)
+    else
+        DB_PASS=$EXTRACTED_PASS
+        JWT_SECRET=$EXTRACTED_JWT
+        echo "✅ Credenciales recuperadas correctamente."
+    fi
 else
-    echo "🔑 Generando nuevas credenciales..."
-    # Generar contraseña solo con caracteres alfanuméricos para evitar errores en URL de Prisma
+    echo "🔑 Generando nuevas credenciales iniciales..."
     DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
     JWT_SECRET=$(openssl rand -base64 32)
 fi
