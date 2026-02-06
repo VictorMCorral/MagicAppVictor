@@ -61,12 +61,22 @@ fi
 echo "📍 Usando IP: $IP_PUBLICA"
 DB_NAME="mtg_nexus"
 DB_USER="mtg_user"
-DB_PASS=$(openssl rand -base64 12)
-JWT_SECRET=$(openssl rand -base64 32)
 APP_PATH=$(pwd)
+
+# Gestionar credenciales persistentes para evitar cambios en cada despliegue
+if [ -f "$APP_PATH/backend/.env" ]; then
+    echo "📄 Recuperando credenciales existentes del archivo .env..."
+    DB_PASS=$(grep DATABASE_URL "$APP_PATH/backend/.env" | sed -e 's/.*:\(.*\)@.*/\1/')
+    JWT_SECRET=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'"' -f2)
+else
+    echo "🔑 Generando nuevas credenciales..."
+    DB_PASS=$(openssl rand -base64 12 | tr -d '/+')
+    JWT_SECRET=$(openssl rand -base64 32)
+fi
 
 # Crear base de datos y usuario si no existen (ignorando errores si ya existen)
 sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
+sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
 sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;" || true
 
 # 7. Configurar Backend
