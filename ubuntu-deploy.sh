@@ -176,8 +176,15 @@ sudo nginx -t
 sudo systemctl restart nginx
 
 # 10. Persistencia de PM2
+echo "💾 Configurando persistencia de PM2..."
 pm2 save
-sudo env PATH=\$PATH:/usr/bin pm2 startup systemd -u \$USER --hp \$HOME || true
+# Generar y ejecutar el comando de startup para el usuario actual
+# Esto evita el error de 'pm2-root.service' al detectar correctamente al usuario
+STARTUP_CMD=$(pm2 startup systemd -u $USER --hp $HOME | grep "sudo env" || true)
+if [ -n "$STARTUP_CMD" ]; then
+    echo "🔄 Configurando inicio automático..."
+    eval "$STARTUP_CMD"
+fi
 
 echo "----------------------------------------------------"
 echo "🎉 Despliegue manual completado con éxito!"
