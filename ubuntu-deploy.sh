@@ -53,7 +53,6 @@ echo "⚙️ Configurando variables de entorno y base de datos..."
 
 # Parámetros
 IP_PUBLICA="$1"
-SUDO_PASS="$2"
 
 if [ -z "$IP_PUBLICA" ]; then
     IP_PUBLICA=$(hostname -I | awk '{print $1}')
@@ -64,18 +63,31 @@ DB_NAME="mtg_nexus"
 DB_USER="mtg_user"
 APP_PATH=$(pwd)
 
-# Definimos una contraseña FIJA para la DB para eliminar errores P1000/P1013 definitivamente
-DB_PASS="MagicApp2026"
-JWT_SECRET=$(openssl rand -base64 32)
-
-# Si existe un .env, intentamos mantener el JWT_SECRET
+# Gestionar credenciales persistentes con lógica de auto-reparación
 if [ -f "$APP_PATH/backend/.env" ]; then
-    JWT_SECRET=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    echo "📄 Intentando recuperar credenciales existentes..."
+    DB_URL_LINE=$(grep DATABASE_URL "$APP_PATH/backend/.env" | tr -d '"' | tr -d "'")
+    EXTRACTED_PASS=$(echo "$DB_URL_LINE" | sed -n 's/.*:\/\/.*:\(.*\)@.*/\1/p')
+    EXTRACTED_JWT=$(grep JWT_SECRET "$APP_PATH/backend/.env" | cut -d'=' -f2- | tr -d '"' | tr -d "'")
+    
+    if [[ -z "$EXTRACTED_PASS" || "$EXTRACTED_PASS" == *"@"* || "$EXTRACTED_PASS" == *":"* ]]; then
+        echo "⚠️ Credenciales corruptas detectadas. Regenerando..."
+        DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
+        JWT_SECRET=$(openssl rand -base64 32)
+    else
+        DB_PASS=$EXTRACTED_PASS
+        JWT_SECRET=$EXTRACTED_JWT
+        echo "✅ Credenciales recuperadas correctamente."
+    fi
+else
+    echo "🔑 Generando nuevas credenciales iniciales..."
+    DB_PASS=$(openssl rand -base64 12 | tr -dc 'a-zA-Z0-9' | head -c 12)
+    JWT_SECRET=$(openssl rand -base64 32)
 fi
 
 # Crear base de datos y usuario
-echo "🐘 Asegurando base de datos y permisos con sudo automatizado..."
-echo "$SUDO_PASS" | sudo -S -u postgres psql <<PSQL
+echo "🐘 Asegurando base de datos y permisos..."
+sudo -u postgres psql <<PSQL
 DO \$\$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '$DB_USER') THEN
@@ -88,7 +100,7 @@ END
 GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;
 PSQL
 
-echo "$SUDO_PASS" | sudo -S -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || echo "$SUDO_PASS" | sudo -S -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+sudo -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
 
 # 7. Configurar Backend
 echo "🏗️ Configurando Backend..."
@@ -125,8 +137,8 @@ EOT
 
 echo "📦 Instalando dependencias del frontend..."
 npm install
-echo "🏗️ Construyendo el frontend para producción..."
-npm run build
+echo "🏗️ Construyendo el frontend para producción (con límite de memoria aumentado)..."
+NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
 # 9. Configurar Nginx para servir el Frontend y actuar como Proxy
 echo "🌐 Configurando Nginx..."
