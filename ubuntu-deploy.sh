@@ -145,7 +145,7 @@ NODE_OPTIONS="--max-old-space-size=2048" npm run build
 echo "🌐 Configurando Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/mtg-nexus"
 
-sudo bash -c "cat <<EOT > $NGINX_CONF
+cat <<EOT | sudo tee $NGINX_CONF > /dev/null
 server {
     listen 80;
     server_name $IP_PUBLICA;
@@ -154,20 +154,20 @@ server {
     location / {
         root $APP_PATH/frontend/build;
         index index.html index.htm;
-        try_files \\$uri \\$uri/ /index.html;
+        try_files \$uri \$uri/ /index.html;
     }
 
     # Proxy para la API del backend
     location /api {
         proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade \\$http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \\$host;
-        proxy_cache_bypass \\$http_upgrade;
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
     }
 }
-EOT"
+EOT
 
 # Habilitar el sitio y reiniciar Nginx
 sudo ln -sf $NGINX_CONF /etc/nginx/sites-enabled/
