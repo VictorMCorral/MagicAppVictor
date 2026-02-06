@@ -142,8 +142,15 @@ echo "🏗️ Construyendo el frontend para producción (con límite de memoria 
 NODE_OPTIONS="--max-old-space-size=2048" npm run build
 
 # 9. Configurar Nginx para servir el Frontend y actuar como Proxy
-echo "🌐 Configurando Nginx..."
+echo "🌐 Configurando Nginx y permisos..."
 NGINX_CONF="/etc/nginx/sites-available/mtg-nexus"
+PUBLIC_WEB_ROOT="/var/www/mtg-nexus"
+
+# Crear directorio público y copiar archivos (evita problemas de permisos en /home)
+sudo mkdir -p $PUBLIC_WEB_ROOT
+sudo cp -r $APP_PATH/frontend/build/* $PUBLIC_WEB_ROOT/
+sudo chown -R www-data:www-data $PUBLIC_WEB_ROOT
+sudo chmod -R 755 $PUBLIC_WEB_ROOT
 
 cat <<EOT | sudo tee $NGINX_CONF > /dev/null
 server {
@@ -152,7 +159,7 @@ server {
 
     # Directorio de los archivos construidos del frontend
     location / {
-        root $APP_PATH/frontend/build;
+        root $PUBLIC_WEB_ROOT;
         index index.html index.htm;
         try_files \$uri \$uri/ /index.html;
     }
