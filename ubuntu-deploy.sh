@@ -88,10 +88,22 @@ else
     JWT_SECRET=$(openssl rand -base64 32)
 fi
 
-# Crear base de datos y usuario si no existen (ignorando errores si ya existen)
-sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
-sudo -u postgres psql -c "ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';" || true
-sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;" || true
+# Crear base de datos y usuario si no existen
+echo "🐘 Asegurando base de datos y permisos..."
+sudo -u postgres psql <<PSQL
+DO \$\$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_user WHERE usename = '$DB_USER') THEN
+        CREATE USER $DB_USER WITH PASSWORD '$DB_PASS';
+    ELSE
+        ALTER USER $DB_USER WITH PASSWORD '$DB_PASS';
+    END IF;
+END
+\$\$;
+PSQL
+
+sudo -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
 # 7. Configurar Backend
 echo "🏗️ Configurando Backend..."
