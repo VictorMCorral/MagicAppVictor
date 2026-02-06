@@ -9,8 +9,8 @@ Write-Host "----------------------------------------------------" -ForegroundCol
 Write-Host "🚀 Iniciando actualización remota en $SERVER_IP" -ForegroundColor Green
 Write-Host "----------------------------------------------------" -ForegroundColor Cyan
 
-# Comando a ejecutar en el servidor (sin pasar contraseña por seguridad)
-$REMOTE_COMMAND = "cd $REMOTE_PATH && git pull origin main && chmod +x ubuntu-deploy.sh && ./ubuntu-deploy.sh $SERVER_IP"
+# Comando a ejecutar en el servidor: Limpiar cambios locales, actualizar y ejecutar deploy
+$REMOTE_COMMAND = "cd $REMOTE_PATH && git fetch --all && git reset --hard origin/main && chmod +x ubuntu-deploy.sh && ./ubuntu-deploy.sh $SERVER_IP"
 
 # Ejecutar vía SSH con -t para permitir interactividad si hace falta sudo
 ssh -t "$SERVER_USER@$SERVER_IP" "$REMOTE_COMMAND"

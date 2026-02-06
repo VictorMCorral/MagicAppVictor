@@ -9,9 +9,10 @@ echo "----------------------------------------------------"
 echo "🚀 Iniciando despliegue manual de MTG Nexus Hub"
 echo "----------------------------------------------------"
 
-# 1. Actualizar el código desde el repositorio
-echo "🔄 Sincronizando código con el repositorio..."
-git pull origin main || echo "⚠️ Advertencia: No se pudo hacer git pull. Continuando con el código local."
+# 1. Actualizar el código desde el repositorio (Forzando coincidencia con main)
+echo "🔄 Sincronizando código con el repositorio (Hard Reset)..."
+git fetch --all
+git reset --hard origin/main
 
 # 2. Actualizar el sistema (opcional/rápido)
 echo "📦 Comprobando actualizaciones del sistema..."
