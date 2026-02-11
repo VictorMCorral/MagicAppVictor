@@ -1,7 +1,7 @@
 {
   "name": "mtg-nexus-backend",
-  "version": "1.0.0",
-  "description": "Backend API para MTG-Nexus-Hub - Plataforma de Magic: The Gathering",
+  "version": "2.0.0",
+  "description": "Backend API para MTG-Nexus-Hub v2.0 - Inventory & Scan Edition",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
@@ -15,7 +15,10 @@
     "mtg",
     "magic-the-gathering",
     "deck-builder",
-    "scryfall"
+    "scryfall",
+    "inventory",
+    "ocr",
+    "scan"
   ],
   "author": "",
   "license": "MIT",

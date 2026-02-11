@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import DeckBuilderPage from './pages/DeckBuilderPage';
 import DeckViewPage from './pages/DeckViewPage';
 import CardSearchPage from './pages/CardSearchPage';
+import InventoryPage from './pages/InventoryPage';
 
 // Componentes
 import PrivateRoute from './components/PrivateRoute';
@@ -19,7 +20,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-mtg-bg-dark flex flex-col">
           <Navbar />
           <Routes>
             {/* Rutas públicas */}
@@ -34,6 +35,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <PrivateRoute>
+                  <InventoryPage />
                 </PrivateRoute>
               }
             />
@@ -58,6 +67,10 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
+      </Router>
+    </AuthProvider>
+  );
+}
       </Router>
     </AuthProvider>
   );
