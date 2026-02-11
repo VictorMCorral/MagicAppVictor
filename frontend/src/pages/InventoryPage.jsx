@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, TrendingUp, Plus, Trash2, Search, X } from 'lucide-react';
+import { Camera, TrendingUp, Plus, Trash2, Search, X, Check, Save } from 'lucide-react';
 import Tesseract from 'tesseract.js';
+import cardService from '../services/cardService';
 
 const InventoryPage = () => {
   const [inventory, setInventory] = useState([]);
@@ -16,12 +17,57 @@ const InventoryPage = () => {
   const [cameraError, setCameraError] = useState(false);
   const fileInputRef = useRef(null);
 
+  // Estados para resultados de búsqueda
+  const [foundCards, setFoundCards] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
   // Placeholder para demostración
   const demoCards = [
     { id: 1, name: 'Black Lotus', quantity: 1, price: 8500, edition: 'Alpha' },
     { id: 2, name: 'Mox Sapphire', quantity: 1, price: 6500, edition: 'Beta' },
     { id: 3, name: 'Counterspell', quantity: 4, price: 45, edition: 'Revised' },
   ];
+
+  // Función para buscar cartas basadas en el texto OCR
+  const searchCardsFromOCR = async (text) => {
+    if (!text || text.trim().length < 3) return;
+    
+    setIsSearching(true);
+    setFoundCards([]);
+    try {
+      // Tomamos las primeras líneas que suelen contener el nombre
+      const lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 3);
+      
+      let allResults = [];
+      
+      // Buscamos con las primeras 2 líneas con contenido
+      for (const line of lines.slice(0, 2)) {
+        const cleanLine = line.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+        if (cleanLine.length < 3) continue;
+        
+        try {
+          const results = await cardService.searchCards(cleanLine);
+          if (results && results.data) {
+            allResults = [...allResults, ...results.data];
+          }
+        } catch (err) {
+          console.error(`Error buscando línea: ${cleanLine}`, err);
+        }
+        
+        if (allResults.length > 0) break;
+      }
+      
+      // Eliminar duplicados por ID
+      const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
+      setFoundCards(uniqueResults.slice(0, 5));
+    } catch (error) {
+      console.error('Error general en búsqueda OCR:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Efecto para vincular el stream al elemento de video cuando ambos estén listos
   useEffect(() => {
@@ -78,8 +124,9 @@ const InventoryPage = () => {
         });
 
         setRecognizedText(result.data.text);
-        alert(`Texto detectado:\n\n${result.data.text.substring(0, 200)}...`);
         setScanning(false);
+        // Buscar cartas automáticamente
+        searchCardsFromOCR(result.data.text);
       };
       reader.readAsDataURL(file);
     } catch (error) {
@@ -119,10 +166,9 @@ const InventoryPage = () => {
       const text = result.data.text;
       setRecognizedText(text);
       console.log('Texto reconocido:', text);
-
-      // Aquí puedes enviar el texto al servidor para procesar la identificación de la carta
-      // por ahora solo mostramos el resultado
-      alert(`Texto detectado:\n\n${text.substring(0, 200)}...`);
+      
+      // Buscar cartas automáticamente tras el OCR
+      searchCardsFromOCR(text);
     } catch (error) {
       console.error('Error en OCR:', error);
       alert('Error al procesar la imagen. Intenta de nuevo.');
@@ -131,11 +177,24 @@ const InventoryPage = () => {
     }
   };
 
+  // Función para añadir una carta al inventario (Simulada)
+  const addCardToInventory = (card) => {
+    const newEntry = {
+      ...card,
+      quantity: 1,
+      uniqueId: Date.now()
+    };
+    setInventory([...inventory, newEntry]);
+    alert(`${card.name} añadida al inventario.`);
+    closeScanner();
+  };
+
   // Limpiar cámara al cerrar modal
   const closeScanner = () => {
     stopCamera();
     setShowScanner(false);
     setRecognizedText('');
+    setFoundCards([]);
   };
 
   useEffect(() => {
@@ -326,6 +385,47 @@ const InventoryPage = () => {
                   <p className="text-mtg-text-light font-mono text-sm break-words max-h-24 overflow-y-auto">
                     {recognizedText}
                   </p>
+                </div>
+              )}
+
+              {/* Resultados de búsqueda OCR */}
+              {(isSearching || foundCards.length > 0) && (
+                <div className="mt-6 border-t border-mtg-gold-bright/20 pt-6">
+                  <h3 className="text-lg font-bold text-mtg-gold-bright mb-4 flex items-center">
+                    {isSearching ? '🔍 Buscando coincidencias...' : '✨ Cartas detectadas'}
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    {foundCards.map((card) => (
+                      <div 
+                        key={card.id} 
+                        className="bg-mtg-bg-dark border border-mtg-gold-bright/20 rounded-lg p-3 flex items-center justify-between hover:border-mtg-gold-bright/50 transition-colors"
+                      >
+                        <div className="flex items-center space-x-3">
+                          {card.image_uris?.small && (
+                            <img src={card.image_uris.small} alt={card.name} className="w-12 h-16 object-contain rounded" />
+                          )}
+                          <div>
+                            <div className="font-bold text-mtg-text-light">{card.name}</div>
+                            <div className="text-xs text-mtg-text-muted">{card.set_name} · {card.prices?.eur || card.prices?.usd || '?'}€</div>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => addCardToInventory(card)}
+                          className="bg-mtg-gold-bright text-mtg-black p-2 rounded-full hover:bg-mtg-gold-dark transition-colors"
+                          title="Añadir al inventario"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {!isSearching && foundCards.length === 0 && recognizedText && (
+                      <p className="text-mtg-text-muted text-center py-4 italic">
+                        No se encontraron cartas exactas. Intenta capturar la imagen más cerca del nombre.
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
