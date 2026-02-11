@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
-import { Camera, TrendingUp, Plus, Trash2, Search } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, TrendingUp, Plus, Trash2, Search, X } from 'lucide-react';
+import Tesseract from 'tesseract.js';
 
 const InventoryPage = () => {
   const [inventory, setInventory] = useState([]);
   const [totalValue, setTotalValue] = useState(0);
   const [showScanner, setShowScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [recognizedText, setRecognizedText] = useState('');
+  const [stream, setStream] = useState(null);
 
   // Placeholder para demostración
   const demoCards = [
@@ -13,6 +20,87 @@ const InventoryPage = () => {
     { id: 2, name: 'Mox Sapphire', quantity: 1, price: 6500, edition: 'Beta' },
     { id: 3, name: 'Counterspell', quantity: 4, price: 45, edition: 'Revised' },
   ];
+
+  // Efecto para vincular el stream al elemento de video cuando ambos estén listos
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, cameraActive]);
+
+  // Iniciar cámara
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      
+      setStream(mediaStream);
+      setCameraActive(true);
+    } catch (error) {
+      console.error('Error al acceder a la cámara:', error);
+      alert('No se pudo acceder a la cámara. Verifica los permisos.');
+    }
+  };
+
+  // Detener cámara
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  // Capturar foto y procesar OCR
+  const captureAndScan = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    try {
+      setScanning(true);
+      const context = canvasRef.current.getContext('2d');
+      canvasRef.current.width = videoRef.current.videoWidth;
+      canvasRef.current.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0);
+
+      const imageData = canvasRef.current.toDataURL('image/jpeg');
+
+      // Procesar OCR con Tesseract
+      const result = await Tesseract.recognize(imageData, 'eng', {
+        logger: (m) => console.log('OCR Progress:', m),
+      });
+
+      const text = result.data.text;
+      setRecognizedText(text);
+      console.log('Texto reconocido:', text);
+
+      // Aquí puedes enviar el texto al servidor para procesar la identificación de la carta
+      // por ahora solo mostramos el resultado
+      alert(`Texto detectado:\n\n${text.substring(0, 200)}...`);
+    } catch (error) {
+      console.error('Error en OCR:', error);
+      alert('Error al procesar la imagen. Intenta de nuevo.');
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Limpiar cámara al cerrar modal
+  const closeScanner = () => {
+    stopCamera();
+    setShowScanner(false);
+    setRecognizedText('');
+  };
+
+  useEffect(() => {
+    if (showScanner) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+
+    return () => stopCamera();
+  }, [showScanner]);
 
   return (
     <div className="min-h-screen bg-mtg-gradient py-8">
@@ -77,23 +165,84 @@ const InventoryPage = () => {
         {/* Scanner Modal - Placeholder */}
         {showScanner && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="card-premium max-w-md w-full">
-              <h2 className="text-2xl font-bold text-mtg-gold-bright mb-6 font-nexus">
-                📷 Escáner OCR
-              </h2>
-              <p className="text-mtg-text-light mb-6">
-                Esta funcionalidad utilizará Tesseract.js para identificar cartas automáticamente desde tu cámara.
-              </p>
-              <div className="bg-mtg-bg-darker rounded-lg p-8 mb-6 border border-mtg-gold-bright/30 text-center">
-                <Camera className="w-12 h-12 text-mtg-gold-bright mx-auto" />
-                <p className="text-mtg-text-muted mt-4">Activar cámara...</p>
+            <div className="card-premium max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-mtg-gold-bright font-nexus">
+                  📷 Escáner OCR de Cartas
+                </h2>
+                <button
+                  onClick={closeScanner}
+                  className="text-mtg-text-light hover:text-mtg-gold-bright transition"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-              <button
-                onClick={() => setShowScanner(false)}
-                className="w-full btn-secondary"
-              >
-                Cerrar
-              </button>
+
+              {cameraActive ? (
+                <div className="space-y-4">
+                  <div className="relative bg-black rounded-lg overflow-hidden border border-mtg-gold-bright/50">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      className="w-full h-80 object-cover"
+                    />
+                  </div>
+
+                  <canvas
+                    ref={canvasRef}
+                    className="hidden"
+                  />
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={captureAndScan}
+                      disabled={scanning}
+                      className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {scanning ? '🔄 Procesando...' : '📸 Capturar y Escanear'}
+                    </button>
+                    <button
+                      onClick={closeScanner}
+                      className="flex-1 btn-secondary"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
+
+                  {recognizedText && (
+                    <div className="bg-mtg-bg-darker rounded-lg p-4 border border-mtg-gold-bright/30">
+                      <p className="text-sm text-mtg-text-muted mb-2">Texto reconocido:</p>
+                      <p className="text-mtg-text-light font-mono text-sm break-words max-h-24 overflow-y-auto">
+                        {recognizedText}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-mtg-bg-darker rounded-lg p-8 border border-mtg-gold-bright/30 text-center">
+                    <Camera className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
+                    <p className="text-mtg-text-light mb-2">Escáner de Cartas MTG</p>
+                    <p className="text-mtg-text-muted text-sm">
+                      Utiliza tu cámara para capturar una foto de la carta y el OCR detectará automáticamente el nombre y los detalles.
+                    </p>
+                  </div>
+                  <button
+                    onClick={startCamera}
+                    className="w-full btn-primary flex items-center justify-center space-x-2"
+                  >
+                    <Camera className="w-5 h-5" />
+                    <span>Activar Cámara</span>
+                  </button>
+                  <button
+                    onClick={closeScanner}
+                    className="w-full btn-secondary"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
