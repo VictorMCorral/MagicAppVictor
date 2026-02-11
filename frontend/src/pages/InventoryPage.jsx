@@ -35,51 +35,58 @@ const InventoryPage = () => {
     setIsSearching(true);
     setFoundCards([]);
     try {
-      // 1. Intentar buscar por patrón de número de carta (Collector Number) como 001/274
-      const collectorNumberMatch = text.match(/(\d{1,3})\/(\d{1,3})/);
-      const collectorNumber = collectorNumberMatch ? collectorNumberMatch[1] : null;
+      // 1. Extraer Número de Coleccionista (Ej: 001/274 -> 001) - Muy fiable
+      const cnMatch = text.match(/(\d{1,4})\/(\d{1,4})/);
+      const collectorNumber = cnMatch ? cnMatch[1] : null;
+
+      // 2. Limpiar líneas para extraer nombres potenciales
+      const lines = text.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 3);
       
-      // 2. Intentar buscar códigos de set (3 caracteres mayúsculas como M21, ELD, etc.)
-      // Buscamos palabras de 3 caracteres que parezcan códigos de expansión
-      const words = text.split(/[\s,]+/).map(w => w.toUpperCase().replace(/[^A-Z0-9]/g, ''));
-      const setCandidate = words.find(w => w.length === 3 && /^[A-Z][A-Z0-9]{2}$/.test(w));
+      // Limpiamos ruidos del OCR (caracteres raros al inicio y fin)
+      const cleanPossibleNames = lines.map(line => {
+        return line
+          .replace(/^[^a-zA-Z0-9]+/, '') // Quitar símbolos raros al inicio
+          .replace(/[^a-zA-Z0-9\s,']+/g, ' ') // Cambiar basura interna por espacio
+          .trim();
+      }).filter(n => n.length > 3);
 
       let allResults = [];
+      let queries = [];
 
-      // Si tenemos número y candidato de set, intentamos búsqueda específica
-      if (collectorNumber && setCandidate) {
-        console.log(`Intentando búsqueda específica: set:${setCandidate} cn:${collectorNumber}`);
-        try {
-          const results = await cardService.searchCards(`s:${setCandidate} cn:${collectorNumber}`);
-          if (results && results.data && results.data.length > 0) {
-            allResults = [...results.data];
-          }
-        } catch (err) {
-          console.log("Fallo búsqueda específica, reintentando por nombre...");
-        }
+      // Query 1: Combinación ganadora (Nombre + Número)
+      if (cleanPossibleNames.length > 0 && collectorNumber) {
+        // Tomamos palabras clave del nombre para evitar que basura al final bloquee la búsqueda
+        const nameKey = cleanPossibleNames[0].split(' ').slice(0, 4).join(' ');
+        queries.push(`"${nameKey}" cn:${collectorNumber}`);
       }
 
-      // 3. Fallback: Búsqueda por nombre (líneas del principio)
-      if (allResults.length === 0) {
-        const lines = text.split('\n')
-          .map(l => l.trim())
-          .filter(l => l.length > 3);
-        
-        for (const line of lines.slice(0, 3)) {
-          const cleanLine = line.replace(/[^a-zA-Z0-9 ]/g, '').trim();
-          if (cleanLine.length < 3) continue;
-          
-          try {
-            const results = await cardService.searchCards(cleanLine);
-            if (results && results.data) {
-              allResults = [...allResults, ...results.data];
-            }
-          } catch (err) {
-            console.error(`Error buscando línea: ${cleanLine}`, err);
+      // Query 2: Solo Nombre (Fuzzy)
+      if (cleanPossibleNames.length > 0) {
+        const nameKey = cleanPossibleNames[0].split(' ').slice(0, 5).join(' ');
+        queries.push(`${nameKey}`);
+      }
+
+      // Query 3: Segunda línea (a veces el nombre está ahí)
+      if (cleanPossibleNames.length > 1) {
+        queries.push(`${cleanPossibleNames[1]}`);
+      }
+
+      // Ejecutar búsquedas en orden de precisión
+      for (const q of queries) {
+        console.log(`Intentando Query Scryfall: ${q}`);
+        try {
+          const results = await cardService.searchCards(q);
+          if (results && results.data && results.data.length > 0) {
+            allResults = [...allResults, ...results.data];
+            // Si encontramos por nombre + número, tenemos la carta exacta. Paramos.
+            if (q.includes('cn:')) break;
           }
-          
-          if (allResults.length > 0) break;
+        } catch (err) {
+          console.error(`Fallo query: ${q}`);
         }
+        if (allResults.length >= 3) break;
       }
       
       // Eliminar duplicados por ID
