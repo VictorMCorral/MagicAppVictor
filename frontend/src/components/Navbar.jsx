@@ -18,11 +18,11 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-20">
           {/* Logo y Título */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 bg-mtg-gold-bright rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 bg-mtg-gold-bright rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform overflow-hidden">
               <img 
-                src="/mtg-nexus-logo.svg" 
+                src="/logo.jpg" 
                 alt="MTG Nexus" 
-                className="w-10 h-10"
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="flex flex-col">

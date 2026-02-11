@@ -1,13 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, TrendingUp, Plus, Trash2, Search, X, Check, Save } from 'lucide-react';
+import { Camera, TrendingUp, Plus, Trash2, X, Save } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import cardService from '../services/cardService';
 
 const InventoryPage = () => {
-  const [inventory, setInventory] = useState([]);
-  const [totalValue, setTotalValue] = useState(0);
+  // Inicializar inventario desde localStorage
+  const [inventory, setInventory] = useState(() => {
+    const saved = localStorage.getItem('mtg_inventory');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
   const [showScanner, setShowScanner] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -15,18 +18,19 @@ const InventoryPage = () => {
   const [recognizedText, setRecognizedText] = useState('');
   const [stream, setStream] = useState(null);
   const [cameraError, setCameraError] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Guardar inventario en localStorage cada vez que cambie
+  useEffect(() => {
+    localStorage.setItem('mtg_inventory', JSON.stringify(inventory));
+  }, [inventory]);
 
   // Estados para resultados de búsqueda
   const [foundCards, setFoundCards] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  // Placeholder para demostración
-  const demoCards = [
-    { id: 1, name: 'Black Lotus', quantity: 1, price: 8500, edition: 'Alpha' },
-    { id: 2, name: 'Mox Sapphire', quantity: 1, price: 6500, edition: 'Beta' },
-    { id: 3, name: 'Counterspell', quantity: 4, price: 45, edition: 'Revised' },
-  ];
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   // Función para buscar cartas basadas en el texto OCR
   const searchCardsFromOCR = async (text) => {
@@ -42,51 +46,70 @@ const InventoryPage = () => {
       // 2. Limpiar líneas para extraer nombres potenciales
       const lines = text.split('\n')
         .map(l => l.trim())
-        .filter(l => l.length > 3);
+        .filter(l => l.length >= 2); // Bajamos a 2 para capturar líneas cortas
       
-      // Limpiamos ruidos del OCR (caracteres raros al inicio y fin)
-      const cleanPossibleNames = lines.map(line => {
+      // Filtrado avanzado: Buscar líneas que parezcan nombres (letras y espacios)
+      const potentialNames = lines.map(line => {
         return line
-          .replace(/^[^a-zA-Z0-9]+/, '') // Quitar símbolos raros al inicio
-          .replace(/[^a-zA-Z0-9\s,']+/g, ' ') // Cambiar basura interna por espacio
+          .replace(/^[^a-zA-Z]+/, '') // Quitar basura al inicio (solo dejar letras al empezar)
+          .replace(/[^a-zA-Z0-9\s,']+/g, ' ') // Limpiar caracteres especiales internos
           .trim();
-      }).filter(n => n.length > 3);
+      }).filter(n => n.length > 3 && /[a-zA-Z]/.test(n)); // Debe tener letras y longitud mínima
 
       let allResults = [];
       let queries = [];
 
       // Query 1: Combinación ganadora (Nombre + Número)
-      if (cleanPossibleNames.length > 0 && collectorNumber) {
-        // Tomamos palabras clave del nombre para evitar que basura al final bloquee la búsqueda
-        const nameKey = cleanPossibleNames[0].split(' ').slice(0, 4).join(' ');
+      if (potentialNames.length > 0 && collectorNumber) {
+        const nameKey = potentialNames[0].split(' ').slice(0, 3).join(' ');
         queries.push(`"${nameKey}" cn:${collectorNumber}`);
       }
 
-      // Query 2: Solo Nombre (Fuzzy)
-      if (cleanPossibleNames.length > 0) {
-        const nameKey = cleanPossibleNames[0].split(' ').slice(0, 5).join(' ');
-        queries.push(`${nameKey}`);
-      }
+      // Query 2: Priorizar la línea que contenga palabras clave de MTG o sea más limpia
+      // Si hay una línea con texto como "the", "of", "Dragon", etc., subirla de prioridad
+      const sortedNames = [...potentialNames].sort((a, b) => {
+        const commonMTG = /the|dragon|spirit|planeswalker|land|creature|sorcery|instant/i;
+        if (commonMTG.test(a) && !commonMTG.test(b)) return -1;
+        if (!commonMTG.test(a) && commonMTG.test(b)) return 1;
+        return b.length - a.length; // Por defecto, la más larga
+      });
 
-      // Query 3: Segunda línea (a veces el nombre está ahí)
-      if (cleanPossibleNames.length > 1) {
-        queries.push(`${cleanPossibleNames[1]}`);
-      }
+      // Añadir las 3 mejores sospechas a las queries
+      sortedNames.slice(0, 3).forEach(name => {
+        // Query exacta (con comillas si tiene espacios)
+        if (name.includes(' ')) {
+          queries.push(`!"${name}"`); 
+        }
+        // Query parcial (primeras palabras)
+        const parts = name.split(' ');
+        if (parts.length > 1) {
+          queries.push(parts.slice(0, 3).join(' '));
+        } else {
+          queries.push(name);
+        }
+      });
 
       // Ejecutar búsquedas en orden de precisión
       for (const q of queries) {
+        if (!q) continue;
         console.log(`Intentando Query Scryfall: ${q}`);
         try {
           const results = await cardService.searchCards(q);
           if (results && results.data && results.data.length > 0) {
-            allResults = [...allResults, ...results.data];
-            // Si encontramos por nombre + número, tenemos la carta exacta. Paramos.
-            if (q.includes('cn:')) break;
+            // Si es una búsqueda exacta (!"nombre"), priorizar
+            if (q.startsWith('!')) {
+              allResults = [...results.data, ...allResults];
+            } else {
+              allResults = [...allResults, ...results.data];
+            }
+            
+            // Si encontramos coincidencia exacta o por número, éxito total
+            if (q.includes('cn:') || q.startsWith('!')) break;
           }
         } catch (err) {
-          console.error(`Fallo query: ${q}`);
+          // Ignorar errores de 404 de Scryfall
         }
-        if (allResults.length >= 3) break;
+        if (allResults.length >= 5) break;
       }
       
       // Eliminar duplicados por ID
@@ -147,6 +170,7 @@ const InventoryPage = () => {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageData = e.target.result;
+        setPreviewUrl(imageData);
         
         // Procesar OCR con Tesseract
         const result = await Tesseract.recognize(imageData, 'eng', {
@@ -187,6 +211,7 @@ const InventoryPage = () => {
       context.drawImage(videoRef.current, 0, 0);
 
       const imageData = canvasRef.current.toDataURL('image/jpeg');
+      setPreviewUrl(imageData);
 
       // Procesar OCR con Tesseract
       const result = await Tesseract.recognize(imageData, 'eng', {
@@ -208,15 +233,29 @@ const InventoryPage = () => {
   };
 
   // Función para añadir una carta al inventario (Simulada)
-  const addCardToInventory = (card) => {
+  const addCardToInventory = () => {
+    if (!selectedCard) return;
+
     const newEntry = {
-      ...card,
-      quantity: 1,
+      ...selectedCard,
+      quantity: parseInt(quantity),
       uniqueId: Date.now()
     };
-    setInventory([...inventory, newEntry]);
-    alert(`${card.name} añadida al inventario.`);
+    
+    setInventory(prev => {
+      const updated = [...prev, newEntry];
+      console.log('Inventario actualizado:', updated);
+      return updated;
+    });
+    
     closeScanner();
+  };
+
+  // Función para preparar la adición de una carta
+  const handleSelectCard = (card) => {
+    setSelectedCard(card);
+    setQuantity(1);
+    setPreviewUrl(null); // Ocultamos el preview al confirmar la carta específica
   };
 
   // Limpiar cámara al cerrar modal
@@ -225,6 +264,9 @@ const InventoryPage = () => {
     setShowScanner(false);
     setRecognizedText('');
     setFoundCards([]);
+    setSelectedCard(null);
+    setQuantity(1);
+    setPreviewUrl(null);
   };
 
   useEffect(() => {
@@ -260,42 +302,84 @@ const InventoryPage = () => {
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <div className="card text-center">
-            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">0</div>
+            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">{inventory.length}</div>
             <p className="text-mtg-text-muted">Total de Cartas</p>
           </div>
           <div className="card text-center">
-            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">0€</div>
+            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">
+              {inventory.reduce((acc, card) => acc + (parseFloat(card.prices?.eur || card.prices?.usd || 0) * card.quantity), 0).toFixed(2)}€
+            </div>
             <p className="text-mtg-text-muted">Valor Total</p>
           </div>
           <div className="card text-center">
-            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">0</div>
+            <div className="text-3xl font-bold text-mtg-gold-bright mb-2">
+              {new Set(inventory.map(c => c.name)).size}
+            </div>
             <p className="text-mtg-text-muted">Tipos Únicos</p>
           </div>
         </div>
 
-        {/* Empty State */}
-        <div className="card text-center py-16">
-          <TrendingUp className="w-16 h-16 text-mtg-gold-bright mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-mtg-gold-bright mb-4">
-            Tu inventario está vacío
-          </h2>
-          <p className="text-mtg-text-muted mb-8 max-w-md mx-auto">
-            Comienza a añadir cartas a tu colección usando el escáner OCR o importa desde un archivo
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <button
-              onClick={() => setShowScanner(true)}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <Camera className="w-5 h-5" />
-              <span>Escanear Cartas</span>
-            </button>
-            <button className="btn-secondary flex items-center space-x-2">
-              <Plus className="w-5 h-5" />
-              <span>Añadir Manual</span>
-            </button>
+        {/* Inventory Table */}
+        {inventory.length > 0 && (
+          <div className="card mb-12 overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-mtg-gold-bright/20">
+                  <th className="py-4 px-2 text-mtg-gold-bright">Carta</th>
+                  <th className="py-4 px-2 text-mtg-gold-bright">Cantidad</th>
+                  <th className="py-4 px-2 text-mtg-gold-bright">Precio Unit.</th>
+                  <th className="py-4 px-2 text-mtg-gold-bright">Total</th>
+                  <th className="py-4 px-2 text-mtg-gold-bright">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventory.map((item) => (
+                  <tr key={item.uniqueId} className="border-b border-mtg-gold-bright/10 hover:bg-white/5">
+                    <td className="py-4 px-2 flex items-center space-x-3">
+                      {item.image_uris?.small && <img src={item.image_uris.small} alt={item.name} className="w-8 h-10 object-contain" />}
+                      <span>{item.name}</span>
+                    </td>
+                    <td className="py-4 px-2 font-nexus">{item.quantity}</td>
+                    <td className="py-4 px-2">{item.prices?.eur || item.prices?.usd || 0}€</td>
+                    <td className="py-4 px-2 text-mtg-gold-bright font-bold">
+                      {(parseFloat(item.prices?.eur || item.prices?.usd || 0) * item.quantity).toFixed(2)}€
+                    </td>
+                    <td className="py-4 px-2">
+                      <button 
+                        onClick={() => setInventory(inventory.filter(i => i.uniqueId !== item.uniqueId))}
+                        className="text-mtg-red hover:text-white transition"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
+        )}
+
+        {/* Empty State */}
+        {inventory.length === 0 && (
+          <div className="card text-center py-16">
+            <TrendingUp className="w-16 h-16 text-mtg-gold-bright mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-mtg-gold-bright mb-4">
+              Tu inventario está vacío
+            </h2>
+            <p className="text-mtg-text-muted mb-8 max-w-md mx-auto">
+              Comienza a añadir cartas a tu colección usando el escáner OCR o subiendo fotos
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <button
+                onClick={() => setShowScanner(true)}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <Camera className="w-5 h-5" />
+                <span>Escanear Cartas</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Scanner Modal - Placeholder */}
         {showScanner && (
@@ -322,6 +406,11 @@ const InventoryPage = () => {
                       playsInline
                       className="w-full h-80 object-cover"
                     />
+                    {previewUrl && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <img src={previewUrl} alt="Preview" className="max-h-full object-contain" />
+                      </div>
+                    )}
                   </div>
 
                   <canvas
@@ -347,8 +436,18 @@ const InventoryPage = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="bg-mtg-bg-darker rounded-lg p-8 border border-mtg-gold-bright/30 text-center">
-                    {cameraError ? (
+                  <div className="bg-mtg-bg-darker rounded-lg p-8 border border-mtg-gold-bright/30 text-center relative overflow-hidden min-h-[200px] flex flex-col justify-center">
+                    {previewUrl ? (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                        <img src={previewUrl} alt="Preview" className="max-h-full object-contain mb-2" />
+                        <button 
+                          onClick={() => setPreviewUrl(null)}
+                          className="bg-black/60 text-white px-3 py-1 rounded-full text-xs hover:bg-mtg-red transition"
+                        >
+                          Cambiar imagen
+                        </button>
+                      </div>
+                    ) : cameraError ? (
                       <>
                         <div className="text-mtg-red mb-4 text-xl">⚠️ Cámara no disponible</div>
                         <p className="text-mtg-text-light mb-4">
@@ -419,7 +518,7 @@ const InventoryPage = () => {
               )}
 
               {/* Resultados de búsqueda OCR */}
-              {(isSearching || foundCards.length > 0) && (
+              {(isSearching || foundCards.length > 0) && !selectedCard && (
                 <div className="mt-6 border-t border-mtg-gold-bright/20 pt-6">
                   <h3 className="text-lg font-bold text-mtg-gold-bright mb-4 flex items-center">
                     {isSearching ? '🔍 Buscando coincidencias...' : '✨ Cartas detectadas'}
@@ -441,7 +540,7 @@ const InventoryPage = () => {
                           </div>
                         </div>
                         <button 
-                          onClick={() => addCardToInventory(card)}
+                          onClick={() => handleSelectCard(card)}
                           className="bg-mtg-gold-bright text-mtg-black p-2 rounded-full hover:bg-mtg-gold-dark transition-colors"
                           title="Añadir al inventario"
                         >
@@ -455,6 +554,56 @@ const InventoryPage = () => {
                         No se encontraron cartas exactas. Intenta capturar la imagen más cerca del nombre.
                       </p>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmación y Cantidad */}
+              {selectedCard && (
+                <div className="mt-6 bg-mtg-blue/20 border border-mtg-gold-bright/30 rounded-lg p-6 animate-fade-in text-center">
+                  <h3 className="text-xl font-bold text-mtg-gold-bright mb-4 flex items-center justify-center">
+                    <Save className="w-6 h-6 mr-2" /> Confirmar Adición
+                  </h3>
+                  
+                  <div className="flex flex-col items-center mb-6">
+                    {selectedCard.image_uris?.normal && (
+                      <img src={selectedCard.image_uris.normal} alt={selectedCard.name} className="w-48 h-auto rounded-lg shadow-2xl mb-4 border border-mtg-gold-bright/20" />
+                    )}
+                    <h4 className="text-lg font-bold text-white">{selectedCard.name}</h4>
+                    <p className="text-mtg-text-muted">{selectedCard.set_name}</p>
+                  </div>
+
+                  <div className="flex items-center justify-center space-x-6 mb-8">
+                    <div className="flex items-center space-x-4">
+                      <button 
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="w-10 h-10 rounded-full border border-mtg-gold-bright text-mtg-gold-bright hover:bg-mtg-gold-bright hover:text-mtg-black transition flex items-center justify-center font-bold text-xl"
+                      >
+                        -
+                      </button>
+                      <span className="text-3xl font-bold text-white min-w-[50px]">{quantity}</span>
+                      <button 
+                        onClick={() => setQuantity(quantity + 1)}
+                        className="w-10 h-10 rounded-full border border-mtg-gold-bright text-mtg-gold-bright hover:bg-mtg-gold-bright hover:text-mtg-black transition flex items-center justify-center font-bold text-xl"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={addCardToInventory}
+                      className="flex-1 btn-primary text-lg py-3"
+                    >
+                      Añadir al Inventario
+                    </button>
+                    <button 
+                      onClick={() => setSelectedCard(null)}
+                      className="flex-1 btn-secondary text-lg py-3"
+                    >
+                      Volver
+                    </button>
                   </div>
                 </div>
               )}

@@ -12,11 +12,11 @@ const HomePage = () => {
       <div className="container mx-auto px-4 py-24 flex-1">
         <div className="text-center mb-16">
           <div className="flex justify-center mb-8">
-            <div className="w-20 h-20 bg-mtg-gold-bright rounded-xl flex items-center justify-center shadow-2xl mana-pulse">
+            <div className="w-24 h-24 bg-mtg-gold-bright rounded-2xl flex items-center justify-center shadow-2xl mana-pulse overflow-hidden border-2 border-mtg-gold-bright">
               <img 
-                src="/mtg-nexus-logo.svg" 
+                src="/logo.jpg" 
                 alt="MTG Nexus" 
-                className="w-16 h-16"
+                className="w-full h-full object-cover"
               />
             </div>
           </div>

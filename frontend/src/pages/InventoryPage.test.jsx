@@ -64,9 +64,11 @@ describe('InventoryPage - v2.0 Inventory & Scan', () => {
       expect(scanButtons.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('debería tener botón "Añadir Manual"', () => {
+    it('debería tener botón "Subir Foto" cuando el scanner está activo', () => {
       render(<InventoryPage />);
-      expect(screen.getByText(/Añadir Manual/i)).toBeInTheDocument();
+      const scanButtons = screen.getAllByText(/Escanear/i);
+      fireEvent.click(scanButtons[0]);
+      expect(screen.getByText(/Subir Foto/i)).toBeInTheDocument();
     });
   });
 
@@ -80,21 +82,19 @@ describe('InventoryPage - v2.0 Inventory & Scan', () => {
       expect(scannerElements.length).toBeGreaterThan(0);
     });
 
-    it('debería mostrar referencia a Tesseract.js', () => {
+    it('debería mostrar mensaje de cámara no disponible si falla', () => {
       render(<InventoryPage />);
       const scanButtons = screen.getAllByText(/Escanear/i);
       fireEvent.click(scanButtons[0]);
-      // El modal debe estar visible
-      const container = scanButtons[0].closest('[class*="flex"]');
-      expect(container).toBeInTheDocument();
+      expect(screen.getByText(/Cámara no disponible/i)).toBeInTheDocument();
     });
 
-    it('debería tener botón "Cerrar" en modal', () => {
+    it('debería tener botón "Cancelar" en modal', () => {
       render(<InventoryPage />);
       const scanButtons = screen.getAllByText(/Escanear/i);
       fireEvent.click(scanButtons[0]);
-      const closeButtons = screen.getAllByText(/Cerrar/i);
-      expect(closeButtons.length).toBeGreaterThan(0);
+      const cancelButtons = screen.getAllByText(/Cancelar/i);
+      expect(cancelButtons.length).toBeGreaterThan(0);
     });
   });
 
