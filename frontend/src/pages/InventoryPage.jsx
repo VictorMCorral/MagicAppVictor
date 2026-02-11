@@ -35,28 +35,51 @@ const InventoryPage = () => {
     setIsSearching(true);
     setFoundCards([]);
     try {
-      // Tomamos las primeras líneas que suelen contener el nombre
-      const lines = text.split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 3);
+      // 1. Intentar buscar por patrón de número de carta (Collector Number) como 001/274
+      const collectorNumberMatch = text.match(/(\d{1,3})\/(\d{1,3})/);
+      const collectorNumber = collectorNumberMatch ? collectorNumberMatch[1] : null;
       
+      // 2. Intentar buscar códigos de set (3 caracteres mayúsculas como M21, ELD, etc.)
+      // Buscamos palabras de 3 caracteres que parezcan códigos de expansión
+      const words = text.split(/[\s,]+/).map(w => w.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+      const setCandidate = words.find(w => w.length === 3 && /^[A-Z][A-Z0-9]{2}$/.test(w));
+
       let allResults = [];
-      
-      // Buscamos con las primeras 2 líneas con contenido
-      for (const line of lines.slice(0, 2)) {
-        const cleanLine = line.replace(/[^a-zA-Z0-9 ]/g, '').trim();
-        if (cleanLine.length < 3) continue;
-        
+
+      // Si tenemos número y candidato de set, intentamos búsqueda específica
+      if (collectorNumber && setCandidate) {
+        console.log(`Intentando búsqueda específica: set:${setCandidate} cn:${collectorNumber}`);
         try {
-          const results = await cardService.searchCards(cleanLine);
-          if (results && results.data) {
-            allResults = [...allResults, ...results.data];
+          const results = await cardService.searchCards(`s:${setCandidate} cn:${collectorNumber}`);
+          if (results && results.data && results.data.length > 0) {
+            allResults = [...results.data];
           }
         } catch (err) {
-          console.error(`Error buscando línea: ${cleanLine}`, err);
+          console.log("Fallo búsqueda específica, reintentando por nombre...");
         }
+      }
+
+      // 3. Fallback: Búsqueda por nombre (líneas del principio)
+      if (allResults.length === 0) {
+        const lines = text.split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 3);
         
-        if (allResults.length > 0) break;
+        for (const line of lines.slice(0, 3)) {
+          const cleanLine = line.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+          if (cleanLine.length < 3) continue;
+          
+          try {
+            const results = await cardService.searchCards(cleanLine);
+            if (results && results.data) {
+              allResults = [...allResults, ...results.data];
+            }
+          } catch (err) {
+            console.error(`Error buscando línea: ${cleanLine}`, err);
+          }
+          
+          if (allResults.length > 0) break;
+        }
       }
       
       // Eliminar duplicados por ID
