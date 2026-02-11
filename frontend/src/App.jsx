@@ -71,9 +71,5 @@ function App() {
     </AuthProvider>
   );
 }
-      </Router>
-    </AuthProvider>
-  );
-}
 
 export default App;
