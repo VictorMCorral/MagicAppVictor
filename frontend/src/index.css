@@ -69,7 +69,7 @@ code {
   }
 
   .mtg-card {
-    @apply rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-mtg-gold-bright/20 hover:border-mtg-gold-bright/60 transform hover:scale-105;
+    @apply rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-mtg-gold-bright/20 hover:border-mtg-gold-bright/60 transform hover:scale-105 relative;
   }
 
   .label-form {
@@ -154,3 +154,4 @@ code {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--mtg-gold-bright);
+}
