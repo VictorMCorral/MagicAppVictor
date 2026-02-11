@@ -13,6 +13,8 @@ const InventoryPage = () => {
   const [scanning, setScanning] = useState(false);
   const [recognizedText, setRecognizedText] = useState('');
   const [stream, setStream] = useState(null);
+  const [cameraError, setCameraError] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Placeholder para demostración
   const demoCards = [
@@ -51,15 +53,39 @@ const InventoryPage = () => {
       
       setStream(mediaStream);
       setCameraActive(true);
+      setCameraError(false);
     } catch (error) {
       console.error('Error al acceder a la cámara:', error);
-      let msg = 'No se pudo acceder a la cámara.';
-      
-      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
-        msg += '\n\n⚠️ NOTA: El acceso a la cámara requiere HTTPS cuando no estás en localhost.';
-      }
-      
-      alert(msg + '\n\nVerifica los permisos de tu navegador o que ninguna otra aplicación esté usando la cámara.');
+      setCameraError(true);
+      setCameraActive(false);
+    }
+  };
+
+  // Procesar archivo de imagen (Fallback)
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setScanning(true);
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageData = e.target.result;
+        
+        // Procesar OCR con Tesseract
+        const result = await Tesseract.recognize(imageData, 'eng', {
+          logger: (m) => console.log('OCR Progress:', m),
+        });
+
+        setRecognizedText(result.data.text);
+        alert(`Texto detectado:\n\n${result.data.text.substring(0, 200)}...`);
+        setScanning(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error procesando archivo:', error);
+      alert('Error al leer el archivo.');
+      setScanning(false);
     }
   };
 
@@ -229,40 +255,82 @@ const InventoryPage = () => {
                       Cerrar
                     </button>
                   </div>
-
-                  {recognizedText && (
-                    <div className="bg-mtg-bg-darker rounded-lg p-4 border border-mtg-gold-bright/30">
-                      <p className="text-sm text-mtg-text-muted mb-2">Texto reconocido:</p>
-                      <p className="text-mtg-text-light font-mono text-sm break-words max-h-24 overflow-y-auto">
-                        {recognizedText}
-                      </p>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div className="bg-mtg-bg-darker rounded-lg p-8 border border-mtg-gold-bright/30 text-center">
-                    <Camera className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-                    <p className="text-mtg-text-light mb-2">Escáner de Cartas MTG</p>
-                    <p className="text-mtg-text-muted text-sm">
-                      Utiliza tu cámara para capturar una foto de la carta y el OCR detectará automáticamente el nombre y los detalles.
-                    </p>
+                    {cameraError ? (
+                      <>
+                        <div className="text-mtg-red mb-4 text-xl">⚠️ Cámara no disponible</div>
+                        <p className="text-mtg-text-light mb-4">
+                          El navegador bloquea la cámara por seguridad (HTTP detectado). 
+                          Usa <b>HTTPS</b> o sube una foto manualmente para probar el OCR.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
+                        <p className="text-mtg-text-light mb-2">Escáner de Cartas MTG</p>
+                        <p className="text-mtg-text-muted text-sm">
+                          Utiliza tu cámara o sube una foto para identificar la carta.
+                        </p>
+                      </>
+                    )}
                   </div>
-                  <button
-                    onClick={startCamera}
-                    className="w-full btn-primary flex items-center justify-center space-x-2"
-                  >
-                    <Camera className="w-5 h-5" />
-                    <span>Activar Cámara</span>
-                  </button>
-                  <button
-                    onClick={closeScanner}
-                    className="w-full btn-secondary"
-                  >
-                    Cerrar
-                  </button>
+                  
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  <div className="flex flex-col gap-3">
+                    {!cameraError && (
+                      <button
+                        onClick={startCamera}
+                        className="w-full btn-primary flex items-center justify-center space-x-2"
+                      >
+                        <Camera className="w-5 h-5" />
+                        <span>Activar Cámara</span>
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={scanning}
+                      className="w-full btn-secondary flex items-center justify-center space-x-2"
+                    >
+                      {scanning ? '🔄 Procesando...' : (
+                        <>
+                          <Plus className="w-5 h-5" />
+                          <span>Subir Foto (.jpg/.png)</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={closeScanner}
+                      className="w-full text-mtg-text-muted hover:text-white transition py-2"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               )}
+
+              {recognizedText && (
+                <div className="bg-mtg-bg-darker rounded-lg p-4 border border-mtg-gold-bright/30 mt-4">
+                  <p className="text-sm text-mtg-text-muted mb-2">Texto reconocido:</p>
+                  <p className="text-mtg-text-light font-mono text-sm break-words max-h-24 overflow-y-auto">
+                    {recognizedText}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
             </div>
           </div>
         )}
