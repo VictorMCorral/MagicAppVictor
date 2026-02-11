@@ -331,9 +331,6 @@ const InventoryPage = () => {
             </div>
           </div>
         )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
