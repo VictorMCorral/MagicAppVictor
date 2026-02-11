@@ -31,15 +31,35 @@ const InventoryPage = () => {
   // Iniciar cámara
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
+      // Intentar primero con la cámara trasera (móvil) y alta resolución
+      const constraints = {
+        video: { 
+          facingMode: { ideal: 'environment' }, 
+          width: { ideal: 1280 }, 
+          height: { ideal: 720 } 
+        }
+      };
+      
+      let mediaStream;
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } catch (e) {
+        console.log('Fallo con constraints ideales, intentando básicos...', e);
+        // Fallback a cualquier cámara disponible
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       
       setStream(mediaStream);
       setCameraActive(true);
     } catch (error) {
       console.error('Error al acceder a la cámara:', error);
-      alert('No se pudo acceder a la cámara. Verifica los permisos.');
+      let msg = 'No se pudo acceder a la cámara.';
+      
+      if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
+        msg += '\n\n⚠️ NOTA: El acceso a la cámara requiere HTTPS cuando no estás en localhost.';
+      }
+      
+      alert(msg + '\n\nVerifica los permisos de tu navegador o que ninguna otra aplicación esté usando la cámara.');
     }
   };
 
