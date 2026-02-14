@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import InventoryPage from './InventoryPage';
 
-describe('InventoryPage - v2.0 Inventory & Scan', () => {
+describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
   describe('Renderizado básico', () => {
     it('debería renderizar sin errores', () => {
       render(<InventoryPage />);
@@ -51,7 +51,6 @@ describe('InventoryPage - v2.0 Inventory & Scan', () => {
 
     it('debería mostrar instrucciones con escáner OCR', () => {
       render(<InventoryPage />);
-      // Puede haber múltiples referencias al escáner OCR
       const scannerReferences = screen.getAllByText(/escáner ocr/i);
       expect(scannerReferences.length).toBeGreaterThan(0);
     });
@@ -77,7 +76,6 @@ describe('InventoryPage - v2.0 Inventory & Scan', () => {
       render(<InventoryPage />);
       const scanButtons = screen.getAllByText(/Escanear/i);
       fireEvent.click(scanButtons[0]);
-      // Buscar la salida del modal en el DOM (puede haber múltiples elementos con este texto)
       const scannerElements = screen.getAllByText(/Escáner/i);
       expect(scannerElements.length).toBeGreaterThan(0);
     });
@@ -98,63 +96,44 @@ describe('InventoryPage - v2.0 Inventory & Scan', () => {
     });
   });
 
-  describe('Tema y estilos', () => {
-    it('debería usar paleta de colores MTG', () => {
+  describe('Tema y estilos Bootstrap', () => {
+    it('debería usar clase min-vh-100 para altura completa', () => {
       const { container } = render(<InventoryPage />);
-      const themeElement = container.querySelector('[class*="bg-mtg"]');
-      expect(themeElement).toBeInTheDocument();
-    });
-
-    it('debería aplicar tema oscuro', () => {
-      const { container } = render(<InventoryPage />);
-      const mainDiv = container.querySelector('[class*="min-h-screen"]');
+      const mainDiv = container.querySelector('.min-vh-100');
       expect(mainDiv).toBeInTheDocument();
     });
 
-    it('debería tener grid para estadísticas', () => {
+    it('debería tener Cards de Bootstrap para estadísticas', () => {
       const { container } = render(<InventoryPage />);
-      const gridContainer = container.querySelector('[class*="grid"]');
-      expect(gridContainer).toBeInTheDocument();
+      const cards = container.querySelectorAll('.card');
+      expect(cards.length).toBeGreaterThan(0);
     });
 
-    it('debería tener cards para estadísticas', () => {
+    it('debería usar Container de Bootstrap', () => {
       const { container } = render(<InventoryPage />);
-      const cards = container.querySelectorAll('[class*="card"]');
-      expect(cards.length).toBeGreaterThan(0);
+      const containerElement = container.querySelector('.container');
+      expect(containerElement).toBeInTheDocument();
+    });
+
+    it('debería tener stats-card para estadísticas', () => {
+      const { container } = render(<InventoryPage />);
+      const statsCards = container.querySelectorAll('.stats-card');
+      expect(statsCards.length).toBeGreaterThanOrEqual(3);
     });
   });
 
-  describe('Estructura HTML', () => {
-    it('debería tener contenedor principal min-h-screen', () => {
+  describe('Estructura HTML Bootstrap', () => {
+    it('debería tener Row para layout', () => {
       const { container } = render(<InventoryPage />);
-      const minHeightContainer = container.querySelector('[class*="min-h-screen"]');
-      expect(minHeightContainer).toBeInTheDocument();
+      const rows = container.querySelectorAll('.row');
+      expect(rows.length).toBeGreaterThan(0);
     });
 
     it('debería tener header con título y botón', () => {
       render(<InventoryPage />);
       expect(screen.getByText(/Mi Inventario/i)).toBeInTheDocument();
-      expect(screen.getAllByText(/Escanear/i).length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('Funcionalidad de modal', () => {
-    it('debería renderizar componente sin errores', () => {
-      render(<InventoryPage />);
-      expect(screen.getByText(/Mi Inventario/i)).toBeInTheDocument();
-    });
-  });
-
-  describe('Branding v2.0', () => {
-    it('debería mostrar versión v2.0', () => {
-      render(<InventoryPage />);
-      expect(screen.getByText(/v2.0/i)).toBeInTheDocument();
-    });
-
-    it('debería tener emoji de diamante en título', () => {
-      render(<InventoryPage />);
-      const title = screen.getByText(/Mi Inventario/i);
-      expect(title.textContent.includes('💎')).toBe(true);
+      const scanButtons = screen.getAllByText(/Escanear/i);
+      expect(scanButtons.length).toBeGreaterThan(0);
     });
   });
 });

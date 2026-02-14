@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
 import { Download, Upload, Plus, Trash2 } from 'lucide-react';
 import deckService from '../services/deckService';
 import cardService from '../services/cardService';
@@ -14,11 +15,7 @@ const DeckViewPage = () => {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
 
-  useEffect(() => {
-    loadDeck();
-  }, [id]);
-
-  const loadDeck = async () => {
+  const loadDeck = useCallback(async () => {
     try {
       const response = await deckService.getDeckById(id);
       setDeck(response.data);
@@ -28,7 +25,11 @@ const DeckViewPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    loadDeck();
+  }, [loadDeck]);
 
   const handleAddCard = async () => {
     if (!cardSearch.trim()) return;
@@ -86,8 +87,11 @@ const DeckViewPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando mazo...</div>
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="fs-5 mt-3">Cargando mazo...</p>
+        </div>
       </div>
     );
   }
@@ -95,159 +99,204 @@ const DeckViewPage = () => {
   if (!deck) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <Container className="py-4">
       {/* Header */}
-      <div className="card mb-8">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">{deck.name}</h1>
-            {deck.format && (
-              <p className="text-gray-600 mt-1">{deck.format}</p>
-            )}
-          </div>
-          <div className="flex space-x-2">
-            <button onClick={handleExport} className="btn-secondary flex items-center space-x-1">
-              <Download className="w-4 h-4" />
-              <span>Exportar</span>
-            </button>
-            <button onClick={() => setShowImport(true)} className="btn-secondary flex items-center space-x-1">
-              <Upload className="w-4 h-4" />
-              <span>Importar</span>
-            </button>
-            <button onClick={() => setShowAddCard(true)} className="btn-primary flex items-center space-x-1">
-              <Plus className="w-4 h-4" />
-              <span>Añadir Carta</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Estadísticas */}
-        {deck.stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600">{deck.stats.totalCards}</p>
-              <p className="text-sm text-gray-600">Total Cartas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-green-600">{deck.stats.uniqueCards}</p>
-              <p className="text-sm text-gray-600">Cartas Únicas</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-purple-600">{deck.stats.avgCmc}</p>
-              <p className="text-sm text-gray-600">CMC Promedio</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-yellow-600">€{deck.stats.totalValueEur}</p>
-              <p className="text-sm text-gray-600">Valor Total</p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Cartas del mazo en vista tipo grid */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Cartas ({deck.cards.length})</h2>
-          <div className="text-sm text-gray-600">
-            Vista de cartas (tamaño completo)
-          </div>
-        </div>
-        {deck.cards.length === 0 ? (
-          <p className="text-gray-600 text-center py-8">
-            No hay cartas en este mazo todavía
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {deck.cards.map((card) => (
-              <div key={card.id} className="relative group">
-                <div className="absolute top-2 left-2 z-10 bg-black/70 text-white text-xs font-bold px-2 py-1 rounded">
-                  {card.quantity}x
-                </div>
-                {card.imageUrl ? (
-                  <img
-                    src={card.imageUrl}
-                    alt={card.name}
-                    className="w-full h-auto rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="w-full aspect-[63/88] bg-gray-200 rounded-lg" />
-                )}
-                <div className="mt-2 text-sm">
-                  <p className="font-semibold truncate" title={card.name}>{card.name}</p>
-                  <p className="text-gray-600 truncate" title={card.type}>{card.type}</p>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  {card.priceEur && (
-                    <span className="text-green-600 font-medium text-sm">
-                      €{(card.priceEur * card.quantity).toFixed(2)}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handleRemoveCard(card.id)}
-                    className="text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Eliminar carta"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+      <Card className="card-mtg mb-4">
+        <Card.Body>
+          <Row className="align-items-start mb-4">
+            <Col>
+              <h1 className="display-6 fw-bold text-dark">{deck.name}</h1>
+              {deck.format && (
+                <p className="text-muted">{deck.format}</p>
+              )}
+            </Col>
+            <Col xs="auto">
+              <div className="d-flex gap-2 flex-wrap">
+                <Button 
+                  className="btn-mtg-secondary d-flex align-items-center gap-1"
+                  onClick={handleExport}
+                >
+                  <Download size={16} />
+                  <span>Exportar</span>
+                </Button>
+                <Button 
+                  className="btn-mtg-secondary d-flex align-items-center gap-1"
+                  onClick={() => setShowImport(true)}
+                >
+                  <Upload size={16} />
+                  <span>Importar</span>
+                </Button>
+                <Button 
+                  className="btn-mtg-primary d-flex align-items-center gap-1"
+                  onClick={() => setShowAddCard(true)}
+                >
+                  <Plus size={16} />
+                  <span>Añadir Carta</span>
+                </Button>
               </div>
-            ))}
+            </Col>
+          </Row>
+
+          {/* Estadísticas */}
+          {deck.stats && (
+            <Row className="g-3 mt-2">
+              <Col xs={6} md={3}>
+                <div className="text-center">
+                  <p className="display-6 fw-bold text-primary mb-0">{deck.stats.totalCards}</p>
+                  <p className="small text-muted">Total Cartas</p>
+                </div>
+              </Col>
+              <Col xs={6} md={3}>
+                <div className="text-center">
+                  <p className="display-6 fw-bold text-success mb-0">{deck.stats.uniqueCards}</p>
+                  <p className="small text-muted">Cartas Únicas</p>
+                </div>
+              </Col>
+              <Col xs={6} md={3}>
+                <div className="text-center">
+                  <p className="display-6 fw-bold mb-0" style={{ color: '#8b5cf6' }}>{deck.stats.avgCmc}</p>
+                  <p className="small text-muted">CMC Promedio</p>
+                </div>
+              </Col>
+              <Col xs={6} md={3}>
+                <div className="text-center">
+                  <p className="display-6 fw-bold text-warning mb-0">€{deck.stats.totalValueEur}</p>
+                  <p className="small text-muted">Valor Total</p>
+                </div>
+              </Col>
+            </Row>
+          )}
+        </Card.Body>
+      </Card>
+
+      {/* Cartas del mazo */}
+      <Card className="card-mtg">
+        <Card.Body>
+          <div className="d-flex align-items-center justify-content-between mb-4">
+            <h2 className="h4 fw-bold mb-0">Cartas ({deck.cards.length})</h2>
+            <small className="text-muted">Vista de cartas (tamaño completo)</small>
           </div>
-        )}
-      </div>
+
+          {deck.cards.length === 0 ? (
+            <p className="text-muted text-center py-5">
+              No hay cartas en este mazo todavía
+            </p>
+          ) : (
+            <Row xs={2} sm={3} md={4} lg={5} xl={6} className="g-3">
+              {deck.cards.map((card) => (
+                <Col key={card.id}>
+                  <div className="position-relative">
+                    <Badge 
+                      bg="dark" 
+                      className="position-absolute top-0 start-0 m-2 z-1"
+                    >
+                      {card.quantity}x
+                    </Badge>
+                    {card.imageUrl ? (
+                      <img
+                        src={card.imageUrl}
+                        alt={card.name}
+                        className="w-100 rounded shadow"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div 
+                        className="w-100 bg-secondary rounded"
+                        style={{ aspectRatio: '63/88' }}
+                      />
+                    )}
+                    <div className="mt-2">
+                      <p className="fw-semibold text-truncate small mb-0" title={card.name}>{card.name}</p>
+                      <p className="text-muted text-truncate small mb-0" title={card.type}>{card.type}</p>
+                    </div>
+                    <div className="d-flex align-items-center justify-content-between mt-2">
+                      {card.priceEur && (
+                        <span className="text-success fw-medium small">
+                          €{(card.priceEur * card.quantity).toFixed(2)}
+                        </span>
+                      )}
+                      <Button
+                        variant="link"
+                        className="p-0 text-danger opacity-75"
+                        onClick={() => handleRemoveCard(card.id)}
+                        title="Eliminar carta"
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          )}
+        </Card.Body>
+      </Card>
 
       {/* Modal Añadir Carta */}
-      {showAddCard && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-6">Añadir Carta</h2>
-            <input
-              type="text"
-              value={cardSearch}
-              onChange={(e) => setCardSearch(e.target.value)}
-              placeholder="Nombre de la carta..."
-              className="input-field mb-4"
-              onKeyPress={(e) => e.key === 'Enter' && handleAddCard()}
-            />
-            <div className="flex space-x-4">
-              <button onClick={() => setShowAddCard(false)} className="flex-1 btn-secondary">
-                Cancelar
-              </button>
-              <button onClick={handleAddCard} className="flex-1 btn-primary">
-                Añadir
-              </button>
-            </div>
+      <Modal show={showAddCard} onHide={() => setShowAddCard(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Añadir Carta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Control
+            type="text"
+            value={cardSearch}
+            onChange={(e) => setCardSearch(e.target.value)}
+            placeholder="Nombre de la carta..."
+            className="form-control-mtg mb-3"
+            onKeyPress={(e) => e.key === 'Enter' && handleAddCard()}
+          />
+          <div className="d-flex gap-3">
+            <Button 
+              className="btn-mtg-secondary flex-grow-1"
+              onClick={() => setShowAddCard(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              className="btn-mtg-primary flex-grow-1"
+              onClick={handleAddCard}
+            >
+              Añadir
+            </Button>
           </div>
-        </div>
-      )}
+        </Modal.Body>
+      </Modal>
 
       {/* Modal Importar */}
-      {showImport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-2xl w-full">
-            <h2 className="text-2xl font-bold mb-6">Importar Mazo</h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Formato: cantidad nombre_carta (ej: 4 Lightning Bolt)
-            </p>
-            <textarea
-              value={importText}
-              onChange={(e) => setImportText(e.target.value)}
-              placeholder="4 Lightning Bolt&#10;2 Counterspell&#10;1 Black Lotus"
-              className="input-field h-64 font-mono text-sm mb-4"
-            />
-            <div className="flex space-x-4">
-              <button onClick={() => setShowImport(false)} className="flex-1 btn-secondary">
-                Cancelar
-              </button>
-              <button onClick={handleImport} className="flex-1 btn-primary">
-                Importar
-              </button>
-            </div>
+      <Modal show={showImport} onHide={() => setShowImport(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Importar Mazo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className="small text-muted mb-3">
+            Formato: cantidad nombre_carta (ej: 4 Lightning Bolt)
+          </p>
+          <Form.Control
+            as="textarea"
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={"4 Lightning Bolt\n2 Counterspell\n1 Black Lotus"}
+            className="form-control-mtg font-monospace small mb-3"
+            style={{ height: '256px' }}
+          />
+          <div className="d-flex gap-3">
+            <Button 
+              className="btn-mtg-secondary flex-grow-1"
+              onClick={() => setShowImport(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              className="btn-mtg-primary flex-grow-1"
+              onClick={handleImport}
+            >
+              Importar
+            </Button>
           </div>
-        </div>
-      )}
-    </div>
+        </Modal.Body>
+      </Modal>
+    </Container>
   );
 };
 

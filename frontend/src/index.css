@@ -1,20 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Bootstrap CSS */
+@import '~bootstrap/dist/css/bootstrap.min.css';
 
-/* Tema Magic The Gathering v2.0 */
+/* ============================================
+   Tema Magic The Gathering - Bootstrap Edition
+   ============================================ */
+
 :root {
+  /* Colores MTG */
   --mtg-gold-bright: #FFD700;
   --mtg-gold-dark: #DAA520;
   --mtg-blue: #0E68AB;
   --mtg-blue-deep: #002D5C;
   --mtg-black: #150B00;
-  --mtg-black-dark: #000000;
+  --mtg-black-dark: #0a0e27;
   --mtg-red: #D3202A;
   --mtg-green: #00733E;
+  --mtg-bg-dark: #0e0e1b;
+  --mtg-bg-darker: #050810;
+  --mtg-text-light: #E8E6E1;
+  --mtg-text-muted: #9ca3af;
+  
+  /* Override Bootstrap variables */
+  --bs-body-bg: #0a0e27;
+  --bs-body-color: #E8E6E1;
+  --bs-primary: #FFD700;
+  --bs-secondary: #0E68AB;
+  --bs-danger: #D3202A;
+  --bs-success: #00733E;
+  --bs-dark: #0e0e1b;
+  --bs-border-color: rgba(255, 215, 0, 0.3);
 }
 
-/* Estilos personalizados */
+/* ============================================
+   Base Styles
+   ============================================ */
 html {
   background: linear-gradient(135deg, #0a0e27 0%, #050810 100%);
   min-height: 100vh;
@@ -22,13 +41,14 @@ html {
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, #0a0e27 0%, #050810 100%);
-  color: #E8E6E1;
+  background: linear-gradient(135deg, #0a0e27 0%, #050810 100%) !important;
+  color: var(--mtg-text-light);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 #root {
@@ -37,89 +57,222 @@ body {
   flex-direction: column;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ============================================
+   MTG Custom Classes
+   ============================================ */
+
+/* Backgrounds */
+.bg-mtg-gradient {
+  background: linear-gradient(135deg, #0a0e27 0%, #050810 100%);
 }
 
-/* Clases utilitarias personalizadas */
-@layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-mtg-gold-bright text-mtg-black rounded-lg hover:bg-mtg-gold-dark transition-colors duration-200 font-bold shadow-lg hover:shadow-xl;
-  }
-
-  .btn-secondary {
-    @apply px-4 py-2 bg-mtg-blue text-mtg-text-light rounded-lg hover:bg-mtg-blue-dark transition-colors duration-200 font-medium shadow-lg;
-  }
-
-  .btn-danger {
-    @apply px-4 py-2 bg-mtg-red text-white rounded-lg hover:bg-mtg-red-deep transition-colors duration-200 font-medium shadow-lg;
-  }
-
-  .card {
-    @apply bg-mtg-bg-dark border border-mtg-gold-bright/30 rounded-lg shadow-lg p-6 hover:border-mtg-gold-bright/50 transition-all duration-300;
-  }
-
-  .card-premium {
-    @apply bg-gradient-to-br from-mtg-blue-deep to-mtg-bg-dark border border-mtg-gold-bright rounded-lg shadow-2xl p-6;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-2 bg-mtg-bg-darker border border-mtg-gold-bright/30 rounded-lg text-mtg-text-light placeholder-mtg-text-muted focus:outline-none focus:ring-2 focus:ring-mtg-gold-bright focus:border-mtg-gold-bright transition-all duration-200;
-  }
-
-  .mtg-card {
-    @apply rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer border border-mtg-gold-bright/20 hover:border-mtg-gold-bright/60 transform hover:scale-105 relative;
-  }
-
-  .label-form {
-    @apply block text-sm font-semibold text-mtg-gold-bright mb-2;
-  }
-
-  .text-accent {
-    @apply text-mtg-gold-bright;
-  }
-
-  .text-accent-muted {
-    @apply text-mtg-text-muted;
-  }
+.bg-mtg-dark {
+  background-color: var(--mtg-bg-dark);
 }
 
-/* Estilos adicionales para cartas MTG */
+.bg-mtg-darker {
+  background-color: var(--mtg-bg-darker);
+}
+
+/* Text Colors */
+.text-mtg-gold {
+  color: var(--mtg-gold-bright) !important;
+}
+
+.text-mtg-gold-dark {
+  color: var(--mtg-gold-dark) !important;
+}
+
+.text-mtg-light {
+  color: var(--mtg-text-light) !important;
+}
+
+.text-mtg-muted {
+  color: var(--mtg-text-muted) !important;
+}
+
+/* Border Colors */
+.border-mtg-gold {
+  border-color: var(--mtg-gold-bright) !important;
+}
+
+.border-mtg-gold-subtle {
+  border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+/* ============================================
+   MTG Buttons
+   ============================================ */
+.btn-mtg-primary {
+  background: linear-gradient(135deg, var(--mtg-gold-bright) 0%, var(--mtg-gold-dark) 100%);
+  color: var(--mtg-black);
+  border: none;
+  font-weight: 700;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.btn-mtg-primary:hover {
+  background: linear-gradient(135deg, var(--mtg-gold-dark) 0%, var(--mtg-gold-bright) 100%);
+  color: var(--mtg-black);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 215, 0, 0.4);
+}
+
+.btn-mtg-secondary {
+  background: linear-gradient(135deg, var(--mtg-blue) 0%, var(--mtg-blue-deep) 100%);
+  color: var(--mtg-text-light);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-mtg-secondary:hover {
+  background: linear-gradient(135deg, var(--mtg-blue-deep) 0%, var(--mtg-blue) 100%);
+  color: var(--mtg-gold-bright);
+  border-color: var(--mtg-gold-bright);
+}
+
+.btn-mtg-danger {
+  background: linear-gradient(135deg, var(--mtg-red) 0%, #8B0000 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-mtg-danger:hover {
+  background: linear-gradient(135deg, #ff4444 0%, var(--mtg-red) 100%);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-mtg-outline {
+  background: transparent;
+  color: var(--mtg-gold-bright);
+  border: 2px solid var(--mtg-gold-bright);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-mtg-outline:hover {
+  background: var(--mtg-gold-bright);
+  color: var(--mtg-black);
+}
+
+/* ============================================
+   MTG Cards
+   ============================================ */
+.card-mtg {
+  background: linear-gradient(145deg, var(--mtg-bg-dark) 0%, rgba(5, 8, 16, 0.9) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.card-mtg:hover {
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.1);
+}
+
+.card-mtg-premium {
+  background: linear-gradient(145deg, var(--mtg-blue-deep) 0%, var(--mtg-bg-dark) 100%);
+  border: 2px solid var(--mtg-gold-bright);
+  border-radius: 0.75rem;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+/* ============================================
+   MTG Form Controls
+   ============================================ */
+.form-control-mtg {
+  background-color: var(--mtg-bg-darker) !important;
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+  color: var(--mtg-text-light) !important;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-control-mtg:focus {
+  background-color: var(--mtg-bg-darker) !important;
+  border-color: var(--mtg-gold-bright) !important;
+  color: var(--mtg-text-light) !important;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.25) !important;
+  outline: none;
+}
+
+.form-control-mtg::placeholder {
+  color: var(--mtg-text-muted);
+}
+
+.form-label-mtg {
+  color: var(--mtg-gold-bright);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   MTG Navbar
+   ============================================ */
+.navbar-mtg {
+  background: linear-gradient(180deg, rgba(14, 14, 27, 0.98) 0%, rgba(5, 8, 16, 0.95) 100%) !important;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.nav-link-mtg {
+  color: var(--mtg-text-light) !important;
+  font-weight: 500;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.375rem;
+  transition: all 0.3s ease;
+}
+
+.nav-link-mtg:hover {
+  color: var(--mtg-gold-bright) !important;
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.nav-link-mtg.active {
+  color: var(--mtg-gold-bright) !important;
+  background: rgba(255, 215, 0, 0.15);
+}
+
+/* ============================================
+   MTG Magic Card Display
+   ============================================ */
+.mtg-card {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  position: relative;
+}
+
+.mtg-card:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
 .mtg-card img {
-  @apply w-full h-auto object-cover;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
 }
 
-.aspect-card {
-  aspect-ratio: 63 / 88;
-}
-
-/* Animación de carga */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-/* Pulso de mana */
-@keyframes mana-pulse {
-  0%, 100% {
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-  }
-}
-
-.mana-pulse {
-  animation: mana-pulse 2s ease-in-out infinite;
-}
-
-/* Efecto de brillo en hover */
 .mtg-card::before {
   content: '';
   position: absolute;
@@ -137,7 +290,163 @@ code {
   left: 100%;
 }
 
-/* Scrollbar personalizado */
+.aspect-card {
+  aspect-ratio: 63 / 88;
+}
+
+/* ============================================
+   Inventory Card Item
+   ============================================ */
+.inventory-card-item {
+  background: linear-gradient(145deg, var(--mtg-bg-dark) 0%, rgba(0, 0, 0, 0.6) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.inventory-card-item:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  transform: translateY(-4px);
+}
+
+.inventory-card-item .quantity-badge {
+  position: absolute;
+  top: -0.5rem;
+  left: -0.5rem;
+  background: linear-gradient(135deg, var(--mtg-gold-bright) 0%, var(--mtg-gold-dark) 100%);
+  color: var(--mtg-black);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.inventory-card-item .card-image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  aspect-ratio: 63 / 88;
+  background: linear-gradient(145deg, #1a1a2e 0%, #0a0a15 100%);
+}
+
+.inventory-card-item .card-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.inventory-card-item:hover .card-image-container img {
+  transform: scale(1.05);
+}
+
+.inventory-card-item .delete-btn {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.inventory-card-item:hover .delete-btn {
+  opacity: 1;
+}
+
+/* ============================================
+   Stats Cards
+   ============================================ */
+.stats-card {
+  background: linear-gradient(145deg, var(--mtg-bg-dark) 0%, rgba(5, 8, 16, 0.9) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.stats-card .stats-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--mtg-gold-bright);
+}
+
+.stats-card .stats-label {
+  color: var(--mtg-text-muted);
+  font-size: 0.875rem;
+}
+
+/* ============================================
+   Alerts
+   ============================================ */
+.alert-mtg-danger {
+  background: rgba(211, 32, 42, 0.2);
+  border: 1px solid var(--mtg-red);
+  color: #ff6b6b;
+  border-radius: 0.5rem;
+}
+
+.alert-mtg-success {
+  background: rgba(0, 115, 62, 0.2);
+  border: 1px solid var(--mtg-green);
+  color: #69db7c;
+  border-radius: 0.5rem;
+}
+
+.alert-mtg-warning {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid var(--mtg-gold-dark);
+  color: var(--mtg-gold-bright);
+  border-radius: 0.5rem;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes mana-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  }
+}
+
+.mana-pulse {
+  animation: mana-pulse 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -154,4 +463,78 @@ code {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--mtg-gold-bright);
+}
+
+/* ============================================
+   Utilities
+   ============================================ */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fix Bootstrap dark theme overrides */
+.modal-content {
+  background-color: var(--mtg-bg-dark);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.modal-header {
+  border-bottom-color: rgba(255, 215, 0, 0.3);
+}
+
+.modal-footer {
+  border-top-color: rgba(255, 215, 0, 0.3);
+}
+
+.dropdown-menu {
+  background-color: var(--mtg-bg-dark);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.dropdown-item {
+  color: var(--mtg-text-light);
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 215, 0, 0.1);
+  color: var(--mtg-gold-bright);
+}
+
+/* Table styles */
+.table-mtg {
+  color: var(--mtg-text-light);
+}
+
+.table-mtg thead th {
+  background-color: rgba(255, 215, 0, 0.1);
+  color: var(--mtg-gold-bright);
+  border-bottom: 2px solid var(--mtg-gold-dark);
+}
+
+.table-mtg tbody tr {
+  border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.table-mtg tbody tr:hover {
+  background-color: rgba(255, 215, 0, 0.05);
+}
+
+/* Page container */
+.page-container {
+  min-height: 100vh;
+  padding: 2rem 0;
 }

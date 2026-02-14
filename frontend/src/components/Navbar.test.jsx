@@ -3,32 +3,23 @@ import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Navbar from './Navbar';
 
-// Mock del contexto de autenticación
+// Mock del AuthContext
 jest.mock('../context/AuthContext', () => ({
-  useAuth: jest.fn(),
+  useAuth: jest.fn()
 }));
 
-// Mock de useNavigate
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
-}));
+const { useAuth } = require('../context/AuthContext');
 
-import { useAuth } from '../context/AuthContext';
-
-describe('Navbar Component - v2.0 MTG Branding', () => {
+describe('Navbar Component - v2.0 MTG Branding (Bootstrap)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Logo y Branding', () => {
-    it('debería renderizar sin errores cuando usuario no está autenticado', () => {
+  describe('Renderizado básico', () => {
+    it('debería renderizar sin errores', () => {
       useAuth.mockReturnValue({
         isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: jest.fn()
       });
 
       render(
@@ -40,13 +31,10 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
       expect(screen.getByText('MTG NEXUS')).toBeInTheDocument();
     });
 
-    it('debería mostrar versión v2.0', () => {
+    it('debería mostrar logo/título MTG NEXUS', () => {
       useAuth.mockReturnValue({
         isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: jest.fn()
       });
 
       render(
@@ -55,37 +43,16 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
         </BrowserRouter>
       );
 
-      expect(screen.getByText('Hub v2.0')).toBeInTheDocument();
-    });
-
-    it('debería mostrar logo SVG', () => {
-      useAuth.mockReturnValue({
-        isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
-      });
-
-      render(
-        <BrowserRouter>
-          <Navbar />
-        </BrowserRouter>
-      );
-
-      const logo = screen.getByAltText('MTG Nexus');
+      const logo = screen.getByText('MTG NEXUS');
       expect(logo).toBeInTheDocument();
     });
   });
 
-  describe('Navegación pública', () => {
+  describe('Usuario no autenticado', () => {
     beforeEach(() => {
       useAuth.mockReturnValue({
         isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: jest.fn()
       });
     });
 
@@ -109,29 +76,28 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
       expect(screen.getByText('Buscar')).toBeInTheDocument();
     });
 
-    it('debería mostrar botón "Iniciar Sesión"', () => {
+    it('debería mostrar botón de Iniciar Sesión', () => {
       render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
-      expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Iniciar Sesión/i })).toBeInTheDocument();
     });
   });
 
-  describe('Navegación autenticada', () => {
+  describe('Usuario autenticado', () => {
+    const mockLogout = jest.fn();
+
     beforeEach(() => {
       useAuth.mockReturnValue({
         isAuthenticated: true,
-        user: { username: 'testuser' },
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: mockLogout
       });
     });
 
-    it('debería mostrar enlace "Mazos" cuando está autenticado', () => {
+    it('debería mostrar enlace "Mazos"', () => {
       render(
         <BrowserRouter>
           <Navbar />
@@ -141,7 +107,7 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
       expect(screen.getByText('Mazos')).toBeInTheDocument();
     });
 
-    it('debería mostrar nuevo enlace "Inventario" (v2.0)', () => {
+    it('debería mostrar enlace "Inventario"', () => {
       render(
         <BrowserRouter>
           <Navbar />
@@ -151,54 +117,51 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
       expect(screen.getByText('Inventario')).toBeInTheDocument();
     });
 
-    it('debería mostrar nombre de usuario', () => {
+    it('debería mostrar botón de Salir', () => {
       render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
-      expect(screen.getByText('testuser')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Salir/i })).toBeInTheDocument();
     });
 
-    it('debería mostrar botón "Salir"', () => {
+    it('debería llamar a logout al hacer click en Salir', () => {
       render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
-      expect(screen.getByText('Salir')).toBeInTheDocument();
+      const logoutButton = screen.getByRole('button', { name: /Salir/i });
+      logoutButton.click();
+
+      expect(mockLogout).toHaveBeenCalled();
     });
   });
 
-  describe('Estilos MTG', () => {
-    it('debería aplicar clase text-mtg-gold-bright al título', () => {
+  describe('Estilos MTG Bootstrap', () => {
+    it('debería aplicar clase text-mtg-gold al título', () => {
       useAuth.mockReturnValue({
         isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: jest.fn()
       });
 
-      const { container } = render(
+      render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
       const title = screen.getByText('MTG NEXUS');
-      expect(title).toHaveClass('text-mtg-gold-bright');
+      expect(title).toHaveClass('text-mtg-gold');
     });
 
-    it('debería aplicar tema oscuro (bg-mtg-bg-dark)', () => {
+    it('debería aplicar clase navbar-mtg al nav', () => {
       useAuth.mockReturnValue({
         isAuthenticated: false,
-        user: null,
-        logout: jest.fn(),
-        login: jest.fn(),
-        register: jest.fn(),
+        logout: jest.fn()
       });
 
       const { container } = render(
@@ -208,7 +171,23 @@ describe('Navbar Component - v2.0 MTG Branding', () => {
       );
 
       const nav = container.querySelector('nav');
-      expect(nav).toHaveClass('bg-mtg-bg-dark');
+      expect(nav).toHaveClass('navbar-mtg');
+    });
+
+    it('debería usar componentes Bootstrap navbar', () => {
+      useAuth.mockReturnValue({
+        isAuthenticated: false,
+        logout: jest.fn()
+      });
+
+      const { container } = render(
+        <BrowserRouter>
+          <Navbar />
+        </BrowserRouter>
+      );
+
+      expect(container.querySelector('.navbar')).toBeInTheDocument();
+      expect(container.querySelector('.container')).toBeInTheDocument();
     });
   });
 });

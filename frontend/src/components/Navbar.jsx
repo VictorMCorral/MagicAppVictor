@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Home, Search, BookOpen, LogIn, LogOut, User, Wand2 } from 'lucide-react';
+import { Navbar as BsNavbar, Nav, Container, Button } from 'react-bootstrap';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -13,87 +14,81 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-mtg-bg-dark border-b-2 border-mtg-gold-bright shadow-2xl">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo y Título */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-12 h-12 bg-mtg-gold-bright rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform overflow-hidden">
-              <img 
-                src="/logo.jpg" 
-                alt="MTG Nexus" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-bold text-mtg-gold-bright font-nexus">MTG NEXUS</span>
-              <span className="text-xs text-mtg-gold-dark font-magic">Hub v2.0</span>
-            </div>
-          </Link>
+    <BsNavbar expand="lg" className="navbar-mtg py-3">
+      <Container>
+        {/* Logo y Título */}
+        <BsNavbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <div className="bg-mtg-gold rounded me-2 overflow-hidden" style={{width: '48px', height: '48px'}}>
+            <img 
+              src="/logo.jpg" 
+              alt="MTG Nexus" 
+              className="w-100 h-100"
+              style={{objectFit: 'cover'}}
+            />
+          </div>
+          <div className="d-flex flex-column">
+            <span className="fw-bold text-mtg-gold">MTG NEXUS</span>
+            <span className="text-mtg-gold-dark small">Hub v2.0</span>
+          </div>
+        </BsNavbar.Brand>
 
-          {/* Links de navegación */}
-          <div className="flex items-center space-x-8">
-            <Link
-              to="/"
-              className="flex items-center space-x-1 text-mtg-text-light hover:text-mtg-gold-bright transition-colors duration-200 group"
-            >
-              <Home className="w-5 h-5 group-hover:text-mtg-gold-dark" />
-              <span className="text-sm font-medium">Inicio</span>
-            </Link>
+        <BsNavbar.Toggle aria-controls="basic-navbar-nav" className="border-0">
+          <span className="navbar-toggler-icon" style={{filter: 'invert(1)'}}></span>
+        </BsNavbar.Toggle>
 
-            <Link
-              to="/cards"
-              className="flex items-center space-x-1 text-mtg-text-light hover:text-mtg-gold-bright transition-colors duration-200 group"
-            >
-              <Search className="w-5 h-5 group-hover:text-mtg-gold-dark" />
-              <span className="text-sm font-medium">Buscar</span>
-            </Link>
+        <BsNavbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto align-items-center gap-3">
+            <Nav.Link as={Link} to="/" className="nav-link-mtg d-flex align-items-center gap-2">
+              <Home size={18} />
+              <span>Inicio</span>
+            </Nav.Link>
+
+            <Nav.Link as={Link} to="/cards" className="nav-link-mtg d-flex align-items-center gap-2">
+              <Search size={18} />
+              <span>Buscar</span>
+            </Nav.Link>
 
             {isAuthenticated ? (
               <>
-                <Link
-                  to="/dashboard"
-                  className="flex items-center space-x-1 text-mtg-text-light hover:text-mtg-gold-bright transition-colors duration-200 group"
-                >
-                  <BookOpen className="w-5 h-5 group-hover:text-mtg-gold-dark" />
-                  <span className="text-sm font-medium">Mazos</span>
-                </Link>
+                <Nav.Link as={Link} to="/dashboard" className="nav-link-mtg d-flex align-items-center gap-2">
+                  <BookOpen size={18} />
+                  <span>Mazos</span>
+                </Nav.Link>
 
-                <Link
-                  to="/inventory"
-                  className="flex items-center space-x-1 text-mtg-text-light hover:text-mtg-gold-bright transition-colors duration-200 group"
-                >
-                  <Wand2 className="w-5 h-5 group-hover:text-mtg-gold-dark" />
-                  <span className="text-sm font-medium">Inventario</span>
-                </Link>
+                <Nav.Link as={Link} to="/inventory" className="nav-link-mtg d-flex align-items-center gap-2">
+                  <Wand2 size={18} />
+                  <span>Inventario</span>
+                </Nav.Link>
 
-                <div className="flex items-center space-x-4 border-l border-mtg-gold pl-6">
-                  <div className="flex items-center space-x-2 text-mtg-text-light">
-                    <User className="w-5 h-5 text-mtg-gold-bright" />
-                    <span className="text-sm font-medium">{user?.username}</span>
+                <div className="d-flex align-items-center gap-3 ps-3 border-start border-mtg-gold-subtle">
+                  <div className="d-flex align-items-center gap-2 text-mtg-light">
+                    <User size={18} className="text-mtg-gold" />
+                    <span className="small fw-medium">{user?.username}</span>
                   </div>
-                  <button
+                  <Button
+                    variant="link"
                     onClick={handleLogout}
-                    className="flex items-center space-x-1 text-mtg-red hover:text-mtg-red-deep transition-colors duration-200"
+                    className="text-danger d-flex align-items-center gap-1 p-0 text-decoration-none"
                   >
-                    <LogOut className="w-5 h-5" />
-                    <span className="text-sm font-medium">Salir</span>
-                  </button>
+                    <LogOut size={18} />
+                    <span className="small fw-medium">Salir</span>
+                  </Button>
                 </div>
               </>
             ) : (
-              <Link
+              <Button
+                as={Link}
                 to="/login"
-                className="px-4 py-2 bg-mtg-gold-bright text-mtg-black font-bold rounded-lg hover:bg-mtg-gold-dark transition-all duration-200 hover:shadow-lg text-sm"
+                className="btn-mtg-primary d-flex align-items-center gap-2"
               >
-                <LogIn className="w-4 h-4 inline mr-1" />
+                <LogIn size={16} />
                 Iniciar Sesión
-              </Link>
+              </Button>
             )}
-          </div>
-        </div>
-      </div>
-    </nav>
+          </Nav>
+        </BsNavbar.Collapse>
+      </Container>
+    </BsNavbar>
   );
 };
 

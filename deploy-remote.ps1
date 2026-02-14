@@ -8,7 +8,7 @@ $REMOTE_PATH = "~/MagicAppVictor"
 Write-Host "----------------------------------------------------" -ForegroundColor Cyan
 Write-Host "🚀 Iniciando actualización remota en $SERVER_IP" -ForegroundColor Green
 Write-Host "----------------------------------------------------" -ForegroundColor Cyan
-
+http://192.168.5.41/
 # Comando a ejecutar en el servidor: Limpiar cambios locales, actualizar y ejecutar deploy
 $REMOTE_COMMAND = "cd $REMOTE_PATH && git fetch --all && git reset --hard origin/main && chmod +x ubuntu-deploy.sh && ./ubuntu-deploy.sh $SERVER_IP"
 

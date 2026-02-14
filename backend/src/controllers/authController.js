@@ -22,7 +22,14 @@ const registerValidation = [
  * Validaciones para login
  */
 const loginValidation = [
-  body('email').isEmail().withMessage('Email inválido'),
+  body('email')
+    .custom((value) => {
+      const normalized = String(value || '').trim();
+      const isEmail = /.+@.+\..+/.test(normalized);
+      const isUsername = /^[a-zA-Z0-9_]{3,20}$/.test(normalized);
+      return isEmail || isUsername;
+    })
+    .withMessage('Ingresa un email o usuario válido'),
   body('password').notEmpty().withMessage('La contraseña es requerida')
 ];
 
@@ -118,16 +125,21 @@ const login = async (req, res) => {
     }
 
     const { email, password } = req.body;
+    const identifier = email.toLowerCase();
 
-    // Buscar usuario
+    const isEmail = /.+@.+\..+/.test(identifier);
+
+    // Buscar usuario por email o username
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
+      where: isEmail
+        ? { email: identifier }
+        : { username: identifier }
     });
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Credenciales inválidas'
+        message: 'No existe un usuario registrado con ese email'
       });
     }
 
@@ -137,7 +149,7 @@ const login = async (req, res) => {
     if (!isValidPassword) {
       return res.status(401).json({
         success: false,
-        message: 'Credenciales inválidas'
+        message: 'La contraseña ingresada no coincide con el usuario'
       });
     }
 

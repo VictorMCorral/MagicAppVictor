@@ -102,7 +102,7 @@ describe('Auth Endpoints', () => {
       expect(response.body.data).toHaveProperty('token');
     });
 
-    it('debería fallar con credenciales incorrectas', async () => {
+    it('debería fallar indicando que el usuario no existe', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
 
       const response = await request(app)
@@ -114,7 +114,30 @@ describe('Auth Endpoints', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('Credenciales inválidas');
+      expect(response.body.message).toBe('No existe un usuario registrado con ese email');
+    });
+
+    it('debería fallar indicando que la contraseña no coincide', async () => {
+      const hashedPassword = await bcrypt.hash('password-correcta', 10);
+
+      prisma.user.findUnique.mockResolvedValue({
+        id: '1',
+        email: 'test@example.com',
+        username: 'testuser',
+        password: hashedPassword,
+        createdAt: new Date()
+      });
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password-incorrecta'
+        });
+
+      expect(response.status).toBe(401);
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toBe('La contraseña ingresada no coincide con el usuario');
     });
   });
 });

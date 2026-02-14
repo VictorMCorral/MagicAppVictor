@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Sparkles } from 'lucide-react';
 
@@ -51,115 +52,129 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-mtg-gradient flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Card Container */}
-        <div className="card-premium">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-mtg-gold-bright rounded-lg">
-                <UserPlus className="h-8 w-8 text-mtg-black" />
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-mtg-gold-bright font-nexus">
-              Crear Cuenta
-            </h2>
-            <p className="mt-3 text-sm text-mtg-text-light">
-              ¿Ya tienes cuenta?{' '}
-              <Link to="/login" className="text-mtg-gold-bright hover:text-mtg-gold-dark font-semibold transition-colors">
-                Inicia sesión aquí
-              </Link>
-            </p>
-          </div>
+    <div 
+      className="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3"
+      style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}
+    >
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={8} lg={6} xl={5}>
+            <Card className="card-mtg-premium">
+              <Card.Body className="p-4 p-md-5">
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded mb-3"
+                    style={{ 
+                      width: '56px', 
+                      height: '56px', 
+                      background: 'var(--mtg-gold-bright)' 
+                    }}
+                  >
+                    <UserPlus size={32} style={{ color: 'var(--mtg-black)' }} />
+                  </div>
+                  <h2 className="h3 fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
+                    Crear Cuenta
+                  </h2>
+                  <p className="mt-2" style={{ color: 'var(--mtg-text-light)' }}>
+                    ¿Ya tienes cuenta?{' '}
+                    <Link 
+                      to="/login" 
+                      className="fw-semibold text-decoration-none"
+                      style={{ color: 'var(--mtg-gold-bright)' }}
+                    >
+                      Inicia sesión aquí
+                    </Link>
+                  </p>
+                </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-mtg-red/20 border border-mtg-red text-mtg-red-deep px-4 py-3 rounded-lg text-sm">
-                ⚠️ {error}
-              </div>
-            )}
+                {/* Form */}
+                <Form onSubmit={handleSubmit}>
+                  {error && (
+                    <Alert variant="danger" className="alert-mtg-danger">
+                      ⚠️ {error}
+                    </Alert>
+                  )}
 
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="label-form">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="tu@email.com"
-                />
-              </div>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="form-label-mtg">Email</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      autoComplete="email"
+                      required
+                      value={formData.email}
+                      onChange={handleChange}
+                      className="form-control-mtg"
+                      placeholder="tu@email.com"
+                    />
+                  </Form.Group>
 
-              <div>
-                <label htmlFor="username" className="label-form">
-                  Nombre de Usuario
-                </label>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={formData.username}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="usuario123"
-                />
-              </div>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="form-label-mtg">Nombre de Usuario</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="username"
+                      autoComplete="username"
+                      required
+                      value={formData.username}
+                      onChange={handleChange}
+                      className="form-control-mtg"
+                      placeholder="usuario123"
+                    />
+                  </Form.Group>
 
-              <div>
-                <label htmlFor="password" className="label-form">
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="••••••••"
-                />
-              </div>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="form-label-mtg">Contraseña</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="password"
+                      autoComplete="new-password"
+                      required
+                      value={formData.password}
+                      onChange={handleChange}
+                      className="form-control-mtg"
+                      placeholder="••••••••"
+                    />
+                  </Form.Group>
 
-              <div>
-                <label htmlFor="confirmPassword" className="label-form">
-                  Confirmar Contraseña
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="input-field"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="form-label-mtg">Confirmar Contraseña</Form.Label>
+                    <Form.Control
+                      type="password"
+                      name="confirmPassword"
+                      autoComplete="new-password"
+                      required
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="form-control-mtg"
+                      placeholder="••••••••"
+                    />
+                  </Form.Group>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              <span>{loading ? 'Creando cuenta...' : 'Registrarse'}</span>
-            </button>
-          </form>
-        </div>
-      </div>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-mtg-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span>Creando cuenta...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={20} />
+                        <span>Registrarse</span>
+                      </>
+                    )}
+                  </Button>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };

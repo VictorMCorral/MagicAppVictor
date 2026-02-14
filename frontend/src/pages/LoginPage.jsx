@@ -2,107 +2,213 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Sparkles } from 'lucide-react';
+import { Container, Row, Col, Card, Form, Button, Alert, ButtonGroup } from 'react-bootstrap';
+
+const FIELD_LABELS = {
+  email: 'Email',
+  password: 'Contraseña'
+};
+
+const KNOWN_LOGIN_MESSAGES = {
+  'Error al iniciar sesión': 'El servidor encontró un error al intentar iniciar tu sesión. Intenta nuevamente en unos minutos.'
+};
+
+const ACCESSIBILITY_OPTIONS = [
+  {
+    id: 'accessible',
+    label: 'Accesible y Usable',
+    helper: 'La experiencia se siente clara y usable para todos los jugadores.'
+  },
+  {
+    id: 'not-accessible',
+    label: 'No Accesible',
+    helper: 'La presentación no cumple con criterios básicos de acceso para personas con discapacidad.'
+  },
+  {
+    id: 'not-usable',
+    label: 'No Usable',
+    helper: 'El flujo actual no permite completar las tareas básicas de acceso al sistema.'
+  }
+];
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [feedbackMessages, setFeedbackMessages] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedAccessibility, setSelectedAccessibility] = useState(
+    ACCESSIBILITY_OPTIONS[0].id
+  );
   
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const getDetailedLoginFeedback = (err) => {
+    const responseData = err.response?.data;
+    const statusCode = err.response?.status;
+    const messages = [];
+
+    if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+      responseData.errors.forEach((errorItem) => {
+        if (!errorItem?.msg) return;
+        let fieldLabel = FIELD_LABELS[errorItem.path] || errorItem.path;
+
+        if (!fieldLabel) {
+          if (/email/i.test(errorItem.msg)) fieldLabel = 'Email';
+          if (/contraseña|password/i.test(errorItem.msg)) fieldLabel = 'Contraseña';
+        }
+
+        if (fieldLabel) {
+          messages.push(`${fieldLabel}: ${errorItem.msg}`);
+          return;
+        }
+        messages.push(errorItem.msg);
+      });
+    }
+
+    if (responseData?.message) {
+      messages.push(KNOWN_LOGIN_MESSAGES[responseData.message] || responseData.message);
+    }
+
+    if (!messages.length && !err.response) {
+      messages.push('No fue posible conectar con el servidor. Verifica tu conexión a internet e inténtalo de nuevo.');
+    }
+
+    if (!messages.length && statusCode >= 500) {
+      messages.push('El servidor encontró un error al intentar iniciar tu sesión. Intenta nuevamente en unos minutos.');
+    }
+
+    if (!messages.length) {
+      messages.push('No se pudo completar el inicio de sesión. Revisa los datos ingresados e inténtalo nuevamente.');
+    }
+
+    return [...new Set(messages)];
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setFeedbackMessages([]);
     setLoading(true);
 
     try {
       await login(email, password);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error al iniciar sesión');
+      setFeedbackMessages(getDetailedLoginFeedback(err));
     } finally {
       setLoading(false);
     }
   };
 
+  const selectedOption =
+    ACCESSIBILITY_OPTIONS.find((option) => option.id === selectedAccessibility) ||
+    ACCESSIBILITY_OPTIONS[0];
+
   return (
-    <div className="min-h-screen bg-mtg-gradient flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Card Container */}
-        <div className="card-premium">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-mtg-gold-bright rounded-lg">
-                <LogIn className="h-8 w-8 text-mtg-black" />
-              </div>
-            </div>
-            <h2 className="text-3xl font-bold text-mtg-gold-bright font-nexus">
-              Iniciar Sesión
-            </h2>
-            <p className="mt-3 text-sm text-mtg-text-light">
-              ¿No tienes cuenta?{' '}
-              <Link to="/register" className="text-mtg-gold-bright hover:text-mtg-gold-dark font-semibold transition-colors">
-                Regístrate aquí
-              </Link>
-            </p>
-          </div>
+    <div className="page-container bg-mtg-gradient d-flex align-items-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={6} lg={5}>
+            <Card className="card-mtg-premium p-4">
+              <Card.Body>
+                {/* Header */}
+                <div className="text-center mb-4">
+                  <div className="d-inline-flex p-3 rounded mb-3" style={{background: 'var(--mtg-gold-bright)'}}>
+                    <LogIn size={32} color="#150B00" />
+                  </div>
+                  <h2 className="text-mtg-gold fw-bold mb-2">Iniciar Sesión</h2>
+                  <p className="text-mtg-muted mb-0">
+                    ¿No tienes cuenta?{' '}
+                    <Link to="/register" className="text-mtg-gold text-decoration-none fw-semibold">
+                      Regístrate aquí
+                    </Link>
+                  </p>
+                </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="bg-mtg-red/20 border border-mtg-red text-mtg-red-deep px-4 py-3 rounded-lg text-sm">
-                ⚠️ {error}
-              </div>
-            )}
+                {/* Error Alert */}
+                {feedbackMessages.length > 0 && (
+                  <Alert variant="danger" className="alert-mtg-danger">
+                    <p className="fw-semibold mb-2">Se detectaron errores al iniciar sesión</p>
+                    <ul className="mb-0 ps-3 small">
+                      {feedbackMessages.map((message, index) => (
+                        <li key={`${message}-${index}`}>{message}</li>
+                      ))}
+                    </ul>
+                  </Alert>
+                )}
 
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="label-form">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-field"
-                  placeholder="tu@email.com"
-                />
-              </div>
+                {/* Accessibility Options */}
+                <div className="mb-4">
+                  <p className="small fw-semibold text-mtg-light mb-2">Estado de accesibilidad</p>
+                  <ButtonGroup className="d-flex flex-wrap gap-2 mb-2">
+                    {ACCESSIBILITY_OPTIONS.map((option) => {
+                      const isSelected = selectedAccessibility === option.id;
+                      return (
+                        <Button
+                          key={option.id}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => setSelectedAccessibility(option.id)}
+                          variant={isSelected ? 'warning' : 'outline-secondary'}
+                          size="sm"
+                          className={`rounded-pill ${isSelected ? 'text-dark fw-semibold' : 'text-mtg-light border-mtg-gold-subtle'}`}
+                        >
+                          {option.label}
+                        </Button>
+                      );
+                    })}
+                  </ButtonGroup>
+                  <p className="text-mtg-muted small mb-0" aria-live="polite">
+                    {selectedOption.helper}
+                  </p>
+                </div>
 
-              <div>
-                <label htmlFor="password" className="label-form">
-                  Contraseña
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-field"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
+                {/* Login Form */}
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="form-label-mtg">Email o usuario</Form.Label>
+                    <Form.Control
+                      type="text"
+                      id="email"
+                      name="email"
+                      autoComplete="username"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="form-control-mtg"
+                      placeholder="tu@email.com o admin"
+                    />
+                  </Form.Group>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              <span>{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}</span>
-            </button>
-          </form>
-        </div>
-      </div>
+                  <Form.Group className="mb-4">
+                    <Form.Label className="form-label-mtg">Contraseña</Form.Label>
+                    <Form.Control
+                      type="password"
+                      id="password"
+                      name="password"
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="form-control-mtg"
+                      placeholder="••••••••"
+                    />
+                  </Form.Group>
+
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-mtg-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+                  >
+                    <Sparkles size={20} />
+                    <span>{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}</span>
+                  </Button>
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };

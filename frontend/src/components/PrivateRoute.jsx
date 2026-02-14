@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children }) => {
@@ -7,8 +8,11 @@ const PrivateRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Cargando...</div>
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="fs-5 mt-3">Cargando...</p>
+        </div>
       </div>
     );
   }

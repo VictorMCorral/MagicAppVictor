@@ -2,141 +2,139 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { BookOpen, Search, Upload, Download, Camera, TrendingUp, Sparkles } from 'lucide-react';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
 
   return (
-    <div className="min-h-screen bg-mtg-gradient flex flex-col">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-24 flex-1">
-        <div className="text-center mb-16">
-          <div className="flex justify-center mb-8">
-            <div className="w-24 h-24 bg-mtg-gold-bright rounded-2xl flex items-center justify-center shadow-2xl mana-pulse overflow-hidden border-2 border-mtg-gold-bright">
+    <div className="page-container bg-mtg-gradient">
+      <Container>
+        {/* Hero Section */}
+        <div className="text-center py-5">
+          <div className="d-flex justify-content-center mb-4">
+            <div 
+              className="rounded-3 overflow-hidden mana-pulse"
+              style={{
+                width: '96px', 
+                height: '96px',
+                border: '2px solid var(--mtg-gold-bright)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
+              }}
+            >
               <img 
                 src="/logo.jpg" 
                 alt="MTG Nexus" 
-                className="w-full h-full object-cover"
+                className="w-100 h-100"
+                style={{objectFit: 'cover'}}
               />
             </div>
           </div>
-          <h1 className="text-7xl font-bold text-mtg-gold-bright mb-4 font-nexus drop-shadow-lg">
-            MTG NEXUS HUB
-          </h1>
-          <p className="text-2xl text-mtg-text-light mb-4 font-magic">
-            Tu Plataforma Integral para Magic: The Gathering
-          </p>
-          <p className="text-lg text-mtg-text-muted mb-10 max-w-2xl mx-auto">
+          <h1 className="display-3 fw-bold text-mtg-gold mb-3">MTG NEXUS HUB</h1>
+          <p className="fs-4 text-mtg-light mb-2">Tu Plataforma Integral para Magic: The Gathering</p>
+          <p className="text-mtg-muted mb-4 mx-auto" style={{maxWidth: '600px'}}>
             Gestiona mazos, analiza tu colección y escanea cartas con inteligencia artificial
           </p>
-          <div className="flex justify-center space-x-4 flex-wrap gap-4">
+          
+          <div className="d-flex justify-content-center gap-3 flex-wrap">
             {isAuthenticated ? (
               <>
-                <Link to="/dashboard" className="btn-primary text-lg px-8 py-3">
-                  <BookOpen className="w-5 h-5 inline mr-2" />
+                <Button as={Link} to="/dashboard" className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
+                  <BookOpen size={20} />
                   Mis Mazos
-                </Link>
-                <Link to="/inventory" className="btn-secondary text-lg px-8 py-3">
-                  <TrendingUp className="w-5 h-5 inline mr-2" />
+                </Button>
+                <Button as={Link} to="/inventory" className="btn-mtg-secondary px-4 py-2 d-flex align-items-center gap-2">
+                  <TrendingUp size={20} />
                   Mi Inventario
-                </Link>
+                </Button>
               </>
             ) : (
               <>
-                <Link to="/register" className="btn-primary text-lg px-8 py-3">
-                  <Sparkles className="w-5 h-5 inline mr-2" />
+                <Button as={Link} to="/register" className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
+                  <Sparkles size={20} />
                   Comenzar Gratis
-                </Link>
-                <Link to="/login" className="btn-secondary text-lg px-8 py-3">
+                </Button>
+                <Button as={Link} to="/login" className="btn-mtg-secondary px-4 py-2">
                   Iniciar Sesión
-                </Link>
+                </Button>
               </>
             )}
           </div>
         </div>
 
         {/* Features v1.0 */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-mtg-gold-bright text-center mb-12 font-nexus">
-            Características v1.0 - MVP Core
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="card text-center hover:border-mtg-gold-bright">
-              <Search className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-text-light mb-2">Buscador Scryfall</h3>
-              <p className="text-mtg-text-muted">
-                Busca entre miles de cartas con la potente API de Scryfall
-              </p>
+        <Row className="justify-content-center mt-5">
+          <Col lg={8}>
+            <h2 className="text-mtg-gold fw-bold text-center mb-4">Características v1.0 - MVP Core</h2>
+            <div className="d-flex flex-column gap-3">
+              <div className="d-flex align-items-start gap-3">
+                <Search size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Buscador Scryfall</h5>
+                  <p className="text-mtg-light mb-0">Busca entre miles de cartas con la potente API de Scryfall</p>
+                </div>
+              </div>
+              <div className="d-flex align-items-start gap-3">
+                <BookOpen size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Creador de Mazos</h5>
+                  <p className="text-mtg-light mb-0">Crea y gestiona tus mazos con estadísticas en tiempo real</p>
+                </div>
+              </div>
+              <div className="d-flex align-items-start gap-3">
+                <Upload size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Importar Mazos</h5>
+                  <p className="text-mtg-light mb-0">Importa listas de mazos desde archivos .txt fácilmente</p>
+                </div>
+              </div>
+              <div className="d-flex align-items-start gap-3">
+                <Download size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Exportar Mazos</h5>
+                  <p className="text-mtg-light mb-0">Exporta tus mazos en formato estándar para compartir</p>
+                </div>
+              </div>
             </div>
+          </Col>
+        </Row>
 
-            <div className="card text-center hover:border-mtg-gold-bright">
-              <BookOpen className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-text-light mb-2">Creador de Mazos</h3>
-              <p className="text-mtg-text-muted">
-                Crea y gestiona tus mazos con estadísticas en tiempo real
-              </p>
+        {/* Features v2.0 */}
+        <Row className="justify-content-center mt-5">
+          <Col lg={8}>
+            <h2 className="text-mtg-gold fw-bold text-center mb-4">🚀 Próximas Características v2.0</h2>
+            <div className="d-flex flex-column gap-3">
+              <div className="d-flex align-items-start gap-3">
+                <Camera size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Escaneo OCR</h5>
+                  <p className="text-mtg-light mb-0">Identifica cartas automáticamente usando la cámara con IA</p>
+                </div>
+              </div>
+              <div className="d-flex align-items-start gap-3">
+                <TrendingUp size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Gestión de Colecciones</h5>
+                  <p className="text-mtg-light mb-0">Organiza tu colección y obtén el valor total estimado</p>
+                </div>
+              </div>
+              <div className="d-flex align-items-start gap-3">
+                <TrendingUp size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                <div>
+                  <h5 className="text-mtg-gold fw-bold mb-1">Sincronización Precios</h5>
+                  <p className="text-mtg-light mb-0">Precios en tiempo real de Cardmarket integrados</p>
+                </div>
+              </div>
             </div>
-
-            <div className="card text-center hover:border-mtg-gold-bright">
-              <Upload className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-text-light mb-2">Importar Mazos</h3>
-              <p className="text-mtg-text-muted">
-                Importa listas de mazos desde archivos .txt fácilmente
-              </p>
-            </div>
-
-            <div className="card text-center hover:border-mtg-gold-bright">
-              <Download className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-text-light mb-2">Exportar Mazos</h3>
-              <p className="text-mtg-text-muted">
-                Exporta tus mazos en formato estándar para compartir
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Features v2.0 - Coming Soon */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-mtg-gold-bright text-center mb-12 font-nexus">
-            🚀 Próximas Características v2.0 - Inventory & Scan
-          </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="card-premium text-center border-2 border-mtg-gold-bright">
-              <Camera className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-gold-bright mb-2">Escaneo OCR</h3>
-              <p className="text-mtg-text-light">
-                Identifica cartas automáticamente usando la cámara de tu dispositivo con IA
-              </p>
-            </div>
-
-            <div className="card-premium text-center border-2 border-mtg-gold-bright">
-              <TrendingUp className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-gold-bright mb-2">Gestión de Colecciones</h3>
-              <p className="text-mtg-text-light">
-                Organiza tu colección personal y obtén el valor total estimado
-              </p>
-            </div>
-
-            <div className="card-premium text-center border-2 border-mtg-gold-bright">
-              <TrendingUp className="w-12 h-12 text-mtg-gold-bright mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-mtg-gold-bright mb-2">Sincronización Precios</h3>
-              <p className="text-mtg-text-light">
-                Precios en tiempo real de Cardmarket integrados en tu inventario
-              </p>
-            </div>
-          </div>
-        </div>
+          </Col>
+        </Row>
 
         {/* Version Info */}
-        <div className="mt-16 text-center border-t border-mtg-gold-bright/30 pt-8">
-          <p className="text-mtg-gold-bright text-lg font-bold mb-2">
-            Versión 2.0.0 - Inventory & Scan Edition
-          </p>
-          <p className="text-mtg-text-muted">
-            Construído con React.js, Node.js, PostgreSQL y la API de Scryfall
-          </p>
+        <div className="text-center mt-5 pt-4 border-top border-mtg-gold-subtle">
+          <p className="text-mtg-gold fw-bold mb-1">Versión 2.0.0 - Inventory & Scan Edition</p>
+          <p className="text-mtg-muted small">Construído con React.js, Node.js, PostgreSQL y la API de Scryfall</p>
         </div>
-      </div>
+      </Container>
     </div>
   );
 };

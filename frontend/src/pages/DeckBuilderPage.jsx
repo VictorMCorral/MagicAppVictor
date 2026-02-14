@@ -1,16 +1,19 @@
 import React from 'react';
+import { Container, Card } from 'react-bootstrap';
 
 const DeckBuilderPage = () => {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">Constructor de Mazos</h1>
-      <div className="card">
-        <p className="text-gray-600">Página en construcción...</p>
-        <p className="text-sm text-gray-500 mt-2">
-          Esta funcionalidad estará disponible en una próxima actualización.
-        </p>
-      </div>
-    </div>
+    <Container className="py-4">
+      <h1 className="display-5 fw-bold text-dark mb-4">Constructor de Mazos</h1>
+      <Card className="card-mtg">
+        <Card.Body>
+          <p className="text-muted mb-2">Página en construcción...</p>
+          <p className="small text-muted mb-0">
+            Esta funcionalidad estará disponible en una próxima actualización.
+          </p>
+        </Card.Body>
+      </Card>
+    </Container>
   );
 };
 

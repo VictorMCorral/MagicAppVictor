@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, Edit, Sparkles } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
+import { Plus, Trash2, Sparkles } from 'lucide-react';
 import deckService from '../services/deckService';
 
 const DashboardPage = () => {
@@ -54,143 +55,179 @@ const DashboardPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-mtg-gradient flex items-center justify-center">
-        <div className="text-2xl text-mtg-gold-bright font-nexus animate-pulse">Cargando mazos...</div>
+      <div 
+        className="min-vh-100 d-flex align-items-center justify-content-center"
+        style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}
+      >
+        <div className="text-center">
+          <Spinner animation="border" style={{ color: 'var(--mtg-gold-bright)' }} />
+          <p className="fs-4 mt-3" style={{ color: 'var(--mtg-gold-bright)' }}>Cargando mazos...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-mtg-gradient py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-bold text-mtg-gold-bright font-nexus">
-            💎 Mis Mazos
-          </h1>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <Plus className="w-5 h-5" />
-            <span>Nuevo Mazo</span>
-          </button>
-        </div>
-
-        {decks.length === 0 ? (
-          <div className="card text-center py-16">
-            <Sparkles className="w-16 h-16 text-mtg-gold-bright mx-auto mb-4" />
-            <p className="text-mtg-text-light text-lg mb-6">
-              No tienes mazos todavía
-            </p>
-            <button
+    <div 
+      className="min-vh-100 py-4"
+      style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}
+    >
+      <Container>
+        {/* Header */}
+        <Row className="mb-5 align-items-center">
+          <Col>
+            <h1 className="display-5 fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
+              💎 Mis Mazos
+            </h1>
+          </Col>
+          <Col xs="auto">
+            <Button 
+              className="btn-mtg-primary d-flex align-items-center gap-2"
               onClick={() => setShowCreateModal(true)}
-              className="btn-primary inline-flex items-center space-x-2"
             >
-              <Plus className="w-5 h-5" />
-              <span>Crear tu primer mazo</span>
-            </button>
-          </div>
+              <Plus size={20} />
+              <span>Nuevo Mazo</span>
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Empty State */}
+        {decks.length === 0 ? (
+          <Card className="card-mtg text-center py-5">
+            <Card.Body>
+              <Sparkles size={64} className="mb-4" style={{ color: 'var(--mtg-gold-bright)' }} />
+              <p className="fs-5 mb-4" style={{ color: 'var(--mtg-text-light)' }}>
+                No tienes mazos todavía
+              </p>
+              <Button 
+                className="btn-mtg-primary d-inline-flex align-items-center gap-2"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <Plus size={20} />
+                <span>Crear tu primer mazo</span>
+              </Button>
+            </Card.Body>
+          </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Row md={2} lg={3} className="g-4">
             {decks.map((deck) => (
-              <div key={deck.id} className="card hover:border-mtg-gold-bright">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-mtg-gold-bright">{deck.name}</h3>
-                    {deck.format && (
-                      <span className="inline-block text-xs text-mtg-gold-dark bg-mtg-gold-bright/10 px-2 py-1 rounded mt-2">
-                        {deck.format}
-                      </span>
+              <Col key={deck.id}>
+                <Card className="card-mtg h-100">
+                  <Card.Body className="d-flex flex-column">
+                    <div className="d-flex justify-content-between align-items-start mb-3">
+                      <div>
+                        <Card.Title className="h5 fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
+                          {deck.name}
+                        </Card.Title>
+                        {deck.format && (
+                          <Badge 
+                            bg="transparent" 
+                            className="mt-2"
+                            style={{ 
+                              color: 'var(--mtg-gold-dark)', 
+                              background: 'rgba(212, 175, 55, 0.1)',
+                              border: '1px solid rgba(212, 175, 55, 0.3)'
+                            }}
+                          >
+                            {deck.format}
+                          </Badge>
+                        )}
+                      </div>
+                      <Button
+                        variant="link"
+                        className="p-0 text-danger"
+                        onClick={() => handleDeleteDeck(deck.id)}
+                      >
+                        <Trash2 size={20} />
+                      </Button>
+                    </div>
+
+                    {deck.description && (
+                      <Card.Text className="text-muted small mb-3">
+                        {deck.description}
+                      </Card.Text>
                     )}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteDeck(deck.id)}
-                    className="text-mtg-red hover:text-mtg-red-deep transition-colors"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
 
-                {deck.description && (
-                  <p className="text-mtg-text-muted text-sm mb-4">{deck.description}</p>
-                )}
+                    <div 
+                      className="d-flex justify-content-between align-items-center small text-muted mb-4 pb-3 border-bottom"
+                      style={{ borderColor: 'rgba(212, 175, 55, 0.2) !important' }}
+                    >
+                      <span>📊 {deck._count.cards} cartas</span>
+                      <span>📅 {new Date(deck.updatedAt).toLocaleDateString('es-ES')}</span>
+                    </div>
 
-                <div className="flex justify-between items-center text-sm text-mtg-text-muted mb-6 pb-4 border-b border-mtg-gold-bright/20">
-                  <span>📊 {deck._count.cards} cartas</span>
-                  <span>📅 {new Date(deck.updatedAt).toLocaleDateString('es-ES')}</span>
-                </div>
-
-                <Link
-                  to={`/deck/${deck.id}`}
-                  className="block w-full text-center btn-primary"
-                >
-                  Ver Mazo
-                </Link>
-              </div>
+                    <Link
+                      to={`/deck/${deck.id}`}
+                      className="btn btn-mtg-primary w-100 mt-auto"
+                    >
+                      Ver Mazo
+                    </Link>
+                  </Card.Body>
+                </Card>
+              </Col>
             ))}
-          </div>
+          </Row>
         )}
 
         {/* Modal Crear Mazo */}
-        {showCreateModal && (
-          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="card-premium max-w-md w-full">
-              <h2 className="text-2xl font-bold text-mtg-gold-bright mb-6 font-nexus">
-                ✨ Crear Nuevo Mazo
-              </h2>
-              <form onSubmit={handleCreateDeck}>
-                <div className="space-y-4">
-                  <div>
-                    <label className="label-form">
-                      Nombre del Mazo *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newDeckName}
-                      onChange={(e) => setNewDeckName(e.target.value)}
-                      className="input-field"
-                      placeholder="Mi Mazo Increíble"
-                    />
-                  </div>
+        <Modal 
+          show={showCreateModal} 
+          onHide={() => setShowCreateModal(false)}
+          centered
+          contentClassName="card-mtg-premium"
+        >
+          <Modal.Header className="border-0">
+            <Modal.Title className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
+              ✨ Crear Nuevo Mazo
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form onSubmit={handleCreateDeck}>
+              <Form.Group className="mb-3">
+                <Form.Label className="form-label-mtg">Nombre del Mazo *</Form.Label>
+                <Form.Control
+                  type="text"
+                  required
+                  value={newDeckName}
+                  onChange={(e) => setNewDeckName(e.target.value)}
+                  className="form-control-mtg"
+                  placeholder="Mi Mazo Increíble"
+                />
+              </Form.Group>
 
-                  <div>
-                    <label className="label-form">
-                      Formato (opcional)
-                    </label>
-                    <select
-                      value={newDeckFormat}
-                      onChange={(e) => setNewDeckFormat(e.target.value)}
-                      className="input-field"
-                    >
-                      <option value="">Seleccionar formato...</option>
-                      <option value="Standard">Standard</option>
-                      <option value="Modern">Modern</option>
-                      <option value="Commander">Commander</option>
-                      <option value="Legacy">Legacy</option>
-                      <option value="Vintage">Vintage</option>
-                      <option value="Pauper">Pauper</option>
-                    </select>
-                  </div>
-                </div>
+              <Form.Group className="mb-4">
+                <Form.Label className="form-label-mtg">Formato (opcional)</Form.Label>
+                <Form.Select
+                  value={newDeckFormat}
+                  onChange={(e) => setNewDeckFormat(e.target.value)}
+                  className="form-control-mtg"
+                >
+                  <option value="">Seleccionar formato...</option>
+                  <option value="Standard">Standard</option>
+                  <option value="Modern">Modern</option>
+                  <option value="Commander">Commander</option>
+                  <option value="Legacy">Legacy</option>
+                  <option value="Vintage">Vintage</option>
+                  <option value="Pauper">Pauper</option>
+                </Form.Select>
+              </Form.Group>
 
-                <div className="flex space-x-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreateModal(false)}
-                    className="flex-1 btn-secondary"
-                  >
-                    Cancelar
-                  </button>
-                  <button type="submit" className="flex-1 btn-primary">
-                    Crear
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
+              <div className="d-flex gap-3">
+                <Button
+                  type="button"
+                  className="btn-mtg-secondary flex-grow-1"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="btn-mtg-primary flex-grow-1">
+                  Crear
+                </Button>
+              </div>
+            </Form>
+          </Modal.Body>
+        </Modal>
+      </Container>
     </div>
   );
 };
