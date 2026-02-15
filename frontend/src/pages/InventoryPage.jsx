@@ -239,7 +239,83 @@ const InventoryPage = () => {
     }
   }, []);
 
-  // Procesar archivo de imagen (Fallback)
+  // Pre-procesar imagen para mejor OCR
+  const preprocessImageForOCR = (canvas) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Aplicar filtros para mejorar OCR
+    // 1. Convertir a escala de grises y aumentar contraste
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+
+      // Escala de grises
+      const gray = r * 0.299 + g * 0.587 + b * 0.114;
+
+      // Aumentar contraste (más agresivo para cartas)
+      const contrast = 2.0;
+      const adjusted = ((gray - 128) * contrast) + 128;
+      const clamped = Math.max(0, Math.min(255, adjusted));
+
+      data[i] = clamped;
+      data[i + 1] = clamped;
+      data[i + 2] = clamped;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  };
+
+  // Extraer nombre de carta del texto OCR
+  const extractCardName = (ocrText) => {
+    // Busca la primera palabra(s) que parecen un nombre de carta
+    const lines = ocrText.split('\n').filter(l => l.trim().length > 2);
+    if (lines.length === 0) return ocrText;
+
+    // Primera línea que no sea solo números/símbolos
+    const nameCandidate = lines
+      .find(line => /[a-zA-Z]/.test(line) && line.length > 2);
+
+    return nameCandidate ? nameCandidate.trim() : lines[0].trim();
+  };
+
+  // Procesar imagen con OCR mejorado
+  const performOCR = async (imageDataUrl) => {
+    try {
+      setScanning(true);
+      const result = await Tesseract.recognize(imageDataUrl, 'eng', {
+        logger: (m) => {
+          // Solo mostrar progreso cada 10%
+          if (m.progress % 0.1 < 0.05) {
+            console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
+          }
+        },
+        // Configuración mejorada de Tesseract
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \n\t,—\'"–-(),/',
+        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+      });
+
+      const text = result.data.text;
+      const combinedText = extractCardName(text) + '\n\n' + text;
+      
+      setRecognizedText(combinedText);
+      console.log('Texto reconocido:', combinedText);
+      
+      // Buscar por nombre extraído primero
+      searchCardsFromOCR(combinedText);
+      
+      return combinedText;
+    } catch (error) {
+      console.error('Error en OCR:', error);
+      throw error;
+    } finally {
+      setScanning(false);
+    }
+  };
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -248,21 +324,33 @@ const InventoryPage = () => {
       setScanning(true);
       const reader = new FileReader();
       reader.onload = async (e) => {
-        const imageData = e.target.result;
-        setPreviewUrl(imageData);
+        const imageDataUrl = e.target.result;
+        setPreviewUrl(imageDataUrl);
         
-        const result = await Tesseract.recognize(imageData, 'eng', {
-          logger: (m) => console.log('OCR Progress:', m),
-        });
-
-        setRecognizedText(result.data.text);
-        setScanning(false);
-        searchCardsFromOCR(result.data.text);
+        // Crear canvas para pre-procesar imagen
+        const img = new Image();
+        img.onload = async () => {
+          const processCanvas = document.createElement('canvas');
+          processCanvas.width = img.width;
+          processCanvas.height = img.height;
+          const ctx = processCanvas.getContext('2d');
+          
+          // Dibujar imagen original
+          ctx.drawImage(img, 0, 0);
+          
+          // Pre-procesar para mejorar OCR
+          preprocessImageForOCR(processCanvas);
+          
+          // Procesar con OCR mejorado
+          const processedImageUrl = processCanvas.toDataURL('image/jpeg', 0.95);
+          await performOCR(processedImageUrl);
+        };
+        img.src = imageDataUrl;
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error('Error procesando archivo:', error);
-      alert('Error al leer el archivo.');
+      alert('Error al leer el archivo: ' + error.message);
       setScanning(false);
     }
   };
@@ -289,18 +377,14 @@ const InventoryPage = () => {
       canvasRef.current.height = videoRef.current.videoHeight;
       context.drawImage(videoRef.current, 0, 0);
 
-      const imageData = canvasRef.current.toDataURL('image/jpeg');
+      // Pre-procesar imagen capturada
+      preprocessImageForOCR(canvasRef.current);
+
+      const imageData = canvasRef.current.toDataURL('image/jpeg', 0.95);
       setPreviewUrl(imageData);
 
-      const result = await Tesseract.recognize(imageData, 'eng', {
-        logger: (m) => console.log('OCR Progress:', m),
-      });
-
-      const text = result.data.text;
-      setRecognizedText(text);
-      console.log('Texto reconocido:', text);
-      
-      searchCardsFromOCR(text);
+      // Procesar con OCR mejorado
+      await performOCR(imageData);
     } catch (error) {
       console.error('Error en OCR:', error);
       alert('Error al procesar la imagen. Intenta de nuevo.');
