@@ -108,64 +108,71 @@ const InventoryPage = () => {
     setIsSearching(true);
     setFoundCards([]);
     try {
-      const cnMatch = text.match(/(\d{1,4})\/(\d{1,4})/);
-      const collectorNumber = cnMatch ? cnMatch[1] : null;
-
+      // Extraer el nombre de carta de manera inteligente (primera línea significativa)
       const lines = text.split('\n')
         .map(l => l.trim())
-        .filter(l => l.length >= 2);
+        .filter(l => l.length > 2);
       
-      const potentialNames = lines.map(line => {
-        return line
-          .replace(/^[^a-zA-Z]+/, '')
-          .replace(/[^a-zA-Z0-9\s,']+/g, ' ')
-          .trim();
-      }).filter(n => n.length > 3 && /[a-zA-Z]/.test(n));
+      // El nombre de la carta está típicamente al inicio
+      let cardName = '';
+      for (const line of lines) {
+        // Buscar primera línea que tenga caracteres alfabéticos
+        if (/[a-zA-Z]/.test(line) && !line.match(/^\d+/)) {
+          cardName = line
+            .replace(/[^a-zA-Z0-9\s,'\-–]/g, '') // Limpiar caracteres especiales
+            .trim()
+            .substring(0, 100); // Limitar a 100 caracteres
+          break;
+        }
+      }
+
+      if (!cardName || cardName.length < 3) return;
 
       let allResults = [];
       let queries = [];
 
-      if (potentialNames.length > 0 && collectorNumber) {
-        const nameKey = potentialNames[0].split(' ').slice(0, 3).join(' ');
-        queries.push(`"${nameKey}" cn:${collectorNumber}`);
+      // Búsqueda 1: Búsqueda exacta por nombre completo (prioritario)
+      if (cardName.includes(' ')) {
+        queries.push(`!"${cardName}"`);
+      }
+      
+      // Búsqueda 2: Búsqueda exacta por nombre completo sin comillas
+      queries.push(cardName);
+
+      // Búsqueda 3: Primeras 3 palabras si tiene múltiples palabras
+      if (cardName.includes(' ')) {
+        const firstWords = cardName.split(' ').slice(0, 3).join(' ');
+        if (firstWords !== cardName) {
+          queries.push(firstWords);
+        }
       }
 
-      const sortedNames = [...potentialNames].sort((a, b) => {
-        const commonMTG = /the|dragon|spirit|planeswalker|land|creature|sorcery|instant/i;
-        if (commonMTG.test(a) && !commonMTG.test(b)) return -1;
-        if (!commonMTG.test(a) && commonMTG.test(b)) return 1;
-        return b.length - a.length;
-      });
+      // Búsqueda 4: Primera palabra sola (fallback)
+      const firstWord = cardName.split(' ')[0];
+      if (firstWord.length > 2 && firstWord !== cardName) {
+        queries.push(firstWord);
+      }
 
-      sortedNames.slice(0, 3).forEach(name => {
-        if (name.includes(' ')) {
-          queries.push(`!"${name}"`); 
-        }
-        const parts = name.split(' ');
-        if (parts.length > 1) {
-          queries.push(parts.slice(0, 3).join(' '));
-        } else {
-          queries.push(name);
-        }
-      });
+      console.log('Queries de búsqueda (en orden):', queries);
 
       for (const q of queries) {
-        if (!q) continue;
+        if (!q || q.length < 2) continue;
         console.log(`Intentando Query Scryfall: ${q}`);
         try {
           const results = await cardService.searchCards(q);
           if (results && results.data && results.data.length > 0) {
-            if (q.startsWith('!')) {
-              allResults = [...results.data, ...allResults];
-            } else {
-              allResults = [...allResults, ...results.data];
-            }
+            allResults = [...results.data, ...allResults];
             
-            if (q.includes('cn:') || q.startsWith('!')) break;
+            // Si encontramos resultados con búsqueda exacta, parar
+            if (q.startsWith('!') || q === cardName) {
+              console.log(`Encontrados ${results.data.length} resultados para: ${q}`);
+              break;
+            }
           }
         } catch (err) {
-          // Ignorar errores de 404 de Scryfall
+          console.log(`Sin resultados para: ${q}`);
         }
+        
         if (allResults.length >= 5) break;
       }
       
