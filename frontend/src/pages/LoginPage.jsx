@@ -129,7 +129,7 @@ const LoginPage = () => {
                 {feedbackMessages.length > 0 && (
                   <Alert variant="danger" className="alert-mtg-danger">
                     <p className="fw-semibold mb-2">Se detectaron errores al iniciar sesión</p>
-                    <ul className="mb-0 ps-3 small">
+                    <ul className="mb-0 ps-3 small" style={{lineHeight: '1.6'}}>
                       {feedbackMessages.map((message, index) => (
                         <li key={`${message}-${index}`}>{message}</li>
                       ))}
@@ -139,7 +139,7 @@ const LoginPage = () => {
 
                 {/* Accessibility Options */}
                 <div className="mb-4">
-                  <p className="small fw-semibold text-mtg-light mb-2">Estado de accesibilidad</p>
+                  <p className="small fw-semibold text-mtg-light mb-3">Estado de accesibilidad</p>
                   <ButtonGroup className="d-flex flex-wrap gap-2 mb-2">
                     {ACCESSIBILITY_OPTIONS.map((option) => {
                       const isSelected = selectedAccessibility === option.id;

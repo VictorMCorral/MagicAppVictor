@@ -32,7 +32,7 @@ const HomePage = () => {
           </div>
           <h1 className="display-3 fw-bold text-mtg-gold mb-3">MTG NEXUS HUB</h1>
           <p className="fs-4 text-mtg-light mb-2">Tu Plataforma Integral para Magic: The Gathering</p>
-          <p className="text-mtg-muted mb-4 mx-auto" style={{maxWidth: '600px'}}>
+          <p className="text-mtg-secondary mb-4 mx-auto" style={{maxWidth: '600px', lineHeight: '1.6'}}>
             Gestiona mazos, analiza tu colección y escanea cartas con inteligencia artificial
           </p>
           
@@ -65,34 +65,34 @@ const HomePage = () => {
         {/* Features v1.0 */}
         <Row className="justify-content-center mt-5">
           <Col lg={8}>
-            <h2 className="text-mtg-gold fw-bold text-center mb-4">Características v1.0 - MVP Core</h2>
+            <h2 className="text-mtg-gold fw-bold text-center mb-4">✨ Características v1.0 - MVP Core</h2>
             <div className="d-flex flex-column gap-3">
               <div className="d-flex align-items-start gap-3">
                 <Search size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Buscador Scryfall</h5>
-                  <p className="text-mtg-light mb-0">Busca entre miles de cartas con la potente API de Scryfall</p>
+                  <h5 className="text-mtg-light fw-bold mb-1">Buscador Scryfall</h5>
+                  <p className="text-mtg-secondary mb-0">Busca entre miles de cartas con la potente API de Scryfall</p>
                 </div>
               </div>
               <div className="d-flex align-items-start gap-3">
                 <BookOpen size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Creador de Mazos</h5>
-                  <p className="text-mtg-light mb-0">Crea y gestiona tus mazos con estadísticas en tiempo real</p>
+                  <h5 className="text-mtg-light fw-bold mb-1">Creador de Mazos</h5>
+                  <p className="text-mtg-secondary mb-0">Crea y gestiona tus mazos con estadísticas en tiempo real</p>
                 </div>
               </div>
               <div className="d-flex align-items-start gap-3">
                 <Upload size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Importar Mazos</h5>
-                  <p className="text-mtg-light mb-0">Importa listas de mazos desde archivos .txt fácilmente</p>
+                  <h5 className="text-mtg-light fw-bold mb-1">Importar Mazos</h5>
+                  <p className="text-mtg-secondary mb-0">Importa listas de mazos desde archivos .txt fácilmente</p>
                 </div>
               </div>
               <div className="d-flex align-items-start gap-3">
                 <Download size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                 <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Exportar Mazos</h5>
-                  <p className="text-mtg-light mb-0">Exporta tus mazos en formato estándar para compartir</p>
+                  <h5 className="text-mtg-light fw-bold mb-1">Exportar Mazos</h5>
+                  <p className="text-mtg-secondary mb-0">Exporta tus mazos en formato estándar para compartir</p>
                 </div>
               </div>
             </div>

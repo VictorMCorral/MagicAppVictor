@@ -76,7 +76,7 @@ const RegisterPage = () => {
                   <h2 className="h3 fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
                     Crear Cuenta
                   </h2>
-                  <p className="mt-2" style={{ color: 'var(--mtg-text-light)' }}>
+                  <p className="mt-2 text-mtg-secondary" style={{lineHeight: '1.6'}}>
                     ¿Ya tienes cuenta?{' '}
                     <Link 
                       to="/login" 

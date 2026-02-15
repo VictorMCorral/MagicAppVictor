@@ -49,6 +49,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Improve text readability */
+p {
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+}
+
+small, .small {
+  line-height: 1.5;
 }
 
 #root {
@@ -89,6 +100,35 @@ body {
 
 .text-mtg-muted {
   color: var(--mtg-text-muted) !important;
+}
+
+/* Secondary text with better contrast for dark theme */
+.text-mtg-secondary {
+  color: #b0b0c8 !important;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.text-mtg-terciary {
+  color: #a8a8b8 !important;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Improved Tailwind gray contrast for dark theme */
+.text-gray-600 {
+  color: #a8a8b8 !important;
+  line-height: 1.5;
+}
+
+.text-gray-500 {
+  color: #b0b0c8 !important;
+  line-height: 1.5;
+}
+
+.text-gray-400 {
+  color: #baaac8 !important;
 }
 
 /* Border Colors */
@@ -177,6 +217,16 @@ body {
   border-radius: 0.75rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   transition: all 0.3s ease;
+  color: var(--mtg-text-light); /* Ensure text is light */
+}
+
+.card-mtg .card-title,
+.card-mtg h1, .card-mtg h2, .card-mtg h3, .card-mtg h4, .card-mtg h5, .card-mtg h6 {
+  color: var(--mtg-gold-bright);
+}
+
+.card-mtg .text-muted {
+  color: #d1d5db !important; /* Lighter gray for visibility on dark bg */
 }
 
 .card-mtg:hover {
@@ -189,6 +239,11 @@ body {
   border: 2px solid var(--mtg-gold-bright);
   border-radius: 0.75rem;
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+  color: var(--mtg-text-light) !important;
+}
+
+.card-mtg-premium .text-muted {
+  color: #d1d5db !important;
 }
 
 /* ============================================
@@ -304,6 +359,15 @@ body {
   padding: 0.75rem;
   transition: all 0.3s ease;
   position: relative;
+  color: var(--mtg-text-light) !important;
+}
+
+.inventory-card-item .card-title {
+  color: var(--mtg-text-light) !important;
+}
+
+.inventory-card-item .text-muted {
+  color: #d1d5db !important; /* Gray-300: Very light gray */
 }
 
 .inventory-card-item:hover {
@@ -366,16 +430,19 @@ body {
   border-radius: 0.75rem;
   padding: 1.5rem;
   text-align: center;
+  color: var(--mtg-text-light) !important;
 }
 
-.stats-card .stats-value {
+.stats-card .stats-value, 
+.stats-card .display-6 {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--mtg-gold-bright);
+  color: var(--mtg-gold-bright) !important;
 }
 
-.stats-card .stats-label {
-  color: var(--mtg-text-muted);
+.stats-card .stats-label, 
+.stats-card .text-muted {
+  color: var(--mtg-text-muted) !important;
   font-size: 0.875rem;
 }
 
@@ -500,6 +567,134 @@ body {
   border-top-color: rgba(255, 215, 0, 0.3);
 }
 
+/* New Utilities for High Contrast Deck View */
+.text-green-400 { color: #4ade80 !important; }
+.text-blue-400 { color: #60a5fa !important; }
+.text-yellow-400 { color: #facc15 !important; }
+.text-red-400 { color: #f87171 !important; }
+.text-gray-300 { color: #d1d5db !important; }
+.text-gray-400 { color: #9ca3af !important; }
+.text-gray-500 { color: #6b7280 !important; }
+
+/* Backgrounds */
+.bg-yellow-500\/10 { background-color: rgba(234, 179, 8, 0.1); }
+.bg-yellow-500\/5 { background-color: rgba(234, 179, 8, 0.05); }
+.bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+.bg-white\/5 { background-color: rgba(255, 255, 255, 0.05); }
+.bg-black\/90 { background-color: rgba(0, 0, 0, 0.9); }
+.bg-black\/40 { background-color: rgba(0, 0, 0, 0.4); }
+.bg-black\/20 { background-color: rgba(0, 0, 0, 0.2); }
+
+/* Borders */
+.border-yellow-500\/20 { border-color: rgba(234, 179, 8, 0.2) !important; }
+.border-yellow-500\/30 { border-color: rgba(234, 179, 8, 0.3) !important; }
+.border-white\/10 { border-color: rgba(255, 255, 255, 0.1) !important; }
+.border-white\/5 { border-color: rgba(255, 255, 255, 0.05) !important; }
+
+/* Spacing & Typography Utilities */
+.p-4 { padding: 1rem; }
+.p-8 { padding: 2rem; }
+.px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+.px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+.py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-5 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.py-20 { padding-top: 5rem; padding-bottom: 5rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-8 { margin-top: 2rem; }
+.mt-auto { margin-top: auto; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-8 { margin-bottom: 2rem; }
+.ml-2 { margin-left: 0.5rem; }
+
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+.text-2xl { font-size: 1.5rem; line-height: 2rem; }
+.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.text-center { text-align: center; }
+
+/* Layout & Typography */
+.tracking-wider { letter-spacing: 0.05em; }
+.tracking-widest { letter-spacing: 0.1em; }
+.uppercase { text-transform: uppercase; }
+.rounded-full { border-radius: 9999px; }
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+.backdrop-blur-sm { backdrop-filter: blur(4px); }
+.animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.animate-pulse { animation: mana-pulse 2s infinite; }
+
+/* Positioning & Layout Utilities */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-50 { z-index: 50; }
+.top-0 { top: 0; }
+.right-0 { right: 0; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.w-64 { width: 16rem; }
+.h-64 { height: 16rem; }
+.object-cover { object-fit: cover; }
+.flex-1 { flex: 1 1 0%; }
+.overflow-hidden { overflow: hidden; }
+.pointer-events-none { pointer-events: none; }
+
+/* Transforms & Effects */
+.transform { --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y)); }
+.translate-x-1\/2 { --tw-translate-x: 50%; }
+.-translate-y-1\/2 { --tw-translate-y: -50%; }
+.hover\:-translate-y-1:hover { --tw-translate-y: -0.25rem; }
+.blur-3xl { filter: blur(64px); }
+.opacity-5 { opacity: 0.05; }
+.opacity-60 { opacity: 0.6; }
+.group:hover .group-hover\:scale-110 { transform: scale(1.1); }
+.group:hover .group-hover\:opacity-100 { opacity: 1; }
+.group:hover .group-hover\:opacity-40 { opacity: 0.4; }
+.transition-transform { transition-property: transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+.duration-500 { transition-duration: 500ms; }
+
+/* Flex & Grid */
+.flex-col { flex-direction: column; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.grid { display: grid; }
+.gap-6 { gap: 1.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-2 { gap: 0.5rem; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+@media (min-width: 640px) {
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sm\:flex-row { flex-direction: row; }
+  .sm\:inline { display: inline; }
+}
+@media (min-width: 768px) {
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(140px, 1fr)); }
+  .md\:flex-row { flex-direction: row; }
+  .md\:items-center { align-items: center; }
+  .md\:px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .md\:text-5xl { font-size: 3rem; line-height: 1; }
+}
+@media (min-width: 1024px) {
+  .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(140px, 1fr)); }
+}
+@media (min-width: 1280px) {
+  .xl\:grid-cols-6 { grid-template-columns: repeat(6, minmax(140px, 1fr)); }
+}
+
+
 .dropdown-menu {
   background-color: var(--mtg-bg-dark);
   border: 1px solid rgba(255, 215, 0, 0.3);
@@ -537,4 +732,159 @@ body {
 .page-container {
   min-height: 100vh;
   padding: 2rem 0;
+}
+
+/* Card info text improvements */
+.card-info-primary {
+  color: var(--mtg-text-light) !important;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.card-info-secondary {
+  color: #a8a8b8 !important;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Deck View Page specific styles */
+.deck-view-container {
+  background: var(--mtg-bg-darker);
+  min-height: 100vh;
+}
+
+.deck-header-card {
+  background: linear-gradient(145deg, rgba(20, 20, 35, 0.95) 0%, rgba(10, 10, 20, 0.98) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin-bottom: 2rem;
+}
+
+.deck-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.deck-stat-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.deck-stat-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.deck-stat-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--mtg-gold-bright);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  line-height: 1.2;
+}
+
+.deck-stat-value.green {
+  color: #4ade80 !important;
+}
+
+.deck-stat-value.blue {
+  color: #60a5fa !important;
+}
+
+.deck-stat-value.yellow {
+  color: var(--mtg-gold-bright) !important;
+}
+
+.deck-stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1 !important; /* Higher contrast */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.deck-stat-label.gold {
+  color: var(--mtg-gold-dark) !important;
+}
+
+/* Card Grid Improvements */
+.deck-cards-section {
+  background: rgba(14, 14, 25, 0.6);
+  border: 1px solid rgba(255, 215, 0, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.deck-card-item {
+  background: #1a1b26;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-card-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.5);
+  border-color: var(--mtg-gold-bright);
+}
+
+.deck-card-image-wrapper {
+  position: relative;
+  aspect-ratio: 63/88;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.deck-card-info {
+  padding: 0.75rem;
+  background: #13141f;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.deck-card-name {
+  color: #f1f5f9 !important; /* Very light gray/white */
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.deck-card-type {
+  color: #94a3b8 !important; /* Slate-400 */
+  font-size: 0.75rem;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.deck-card-price {
+  color: #4ade80 !important; /* Bright green */
+  font-weight: 700;
+  font-size: 0.875rem;
+  margin-top: auto;
+}
+
+.deck-actions-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
