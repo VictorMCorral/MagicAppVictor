@@ -56,6 +56,34 @@ npx prisma migrate dev --name init
 npx prisma studio
 ```
 
+### 3.1 Cargar Datos de Ejemplo (Opcional)
+
+Si quieres cargar datos de prueba incluyendo un usuario admin con contraseña admin:
+
+**Opción 1: Desde la raíz del proyecto**
+```bash
+# Windows (Command Prompt)
+reset-db.bat
+
+# Windows (PowerShell)
+.\reset-db.ps1
+
+# Linux/Mac
+./reset-db.sh
+```
+
+**Opción 2: Desde la carpeta backend**
+```bash
+npm run db:reset
+```
+
+Esto creará:
+- ✅ Usuario admin (usuario: `admin`, contraseña: `admin`)
+- ✅ 2 mazos de ejemplo (Mono Red Aggro y Azorius Control)
+- ✅ Cartas de ejemplo en cada mazo
+
+> **Nota:** Solo necesitas hacer esto una vez al iniciar el proyecto. Después, puedes registrar nuevos usuarios normalmente.
+
 ### 4. Configurar Frontend
 
 ```bash

@@ -85,6 +85,26 @@ npx prisma migrate dev
 npm run dev
 ```
 
+### Cargar Datos de Ejemplo (Opcional)
+
+Si quieres empezar con datos de prueba incluyendo un usuario admin:
+
+```bash
+# Desde la raíz del proyecto
+# Windows
+reset-db.bat
+
+# Linux/Mac
+./reset-db.sh
+```
+
+Esto crea:
+- Usuario admin (usuario: `admin`, contraseña: `admin`)
+- 2 mazos de ejemplo
+- Cartas de ejemplo cargadas
+
+Ver [DATABASE_RESET.md](./DATABASE_RESET.md) para más opciones.
+
 ### Frontend
 
 ```bash

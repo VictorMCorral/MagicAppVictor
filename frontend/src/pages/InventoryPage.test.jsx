@@ -67,7 +67,7 @@ describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
       render(<InventoryPage />);
       const scanButtons = screen.getAllByText(/Escanear/i);
       fireEvent.click(scanButtons[0]);
-      expect(screen.getByText(/Subir Foto/i)).toBeInTheDocument();
+      expect(screen.getByText(/Subir/i)).toBeInTheDocument();
     });
   });
 

@@ -600,43 +600,69 @@ const InventoryPage = () => {
               </div>
             ) : (
               <div>
-                <div 
-                  className="rounded p-5 text-center position-relative overflow-hidden d-flex flex-column justify-content-center"
-                  style={{ 
-                    background: 'var(--mtg-bg-darker)', 
-                    border: '1px solid rgba(212, 175, 55, 0.3)',
-                    minHeight: '200px'
-                  }}
-                >
-                  {previewUrl ? (
-                    <div className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
-                      <img src={previewUrl} alt="Preview" style={{ maxHeight: '100%', objectFit: 'contain' }} className="mb-2" />
+                {previewUrl && !cameraError ? (
+                  <>
+                    <div 
+                      className="rounded overflow-hidden mb-3"
+                      style={{ border: '2px solid rgba(212, 175, 55, 0.5)', background: '#000' }}
+                    >
+                      <img src={previewUrl} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+                    </div>
+                    <div className="d-flex gap-2">
                       <Button 
-                        variant="dark"
-                        size="sm"
-                        className="rounded-pill"
+                        className="btn-mtg-secondary flex-grow-1"
                         onClick={() => setPreviewUrl(null)}
                       >
-                        Cambiar imagen
+                        Capturar otra imagen
+                      </Button>
+                      <Button
+                        className="btn-mtg-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        onClick={captureAndScan}
+                        disabled={scanning}
+                      >
+                        {scanning ? (
+                          <>
+                            <Spinner size="sm" />
+                            <span>Procesando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>🔍 Escanear</span>
+                          </>
+                        )}
                       </Button>
                     </div>
-                  ) : cameraError ? (
-                    <>
-                      <div className="text-danger mb-3 fs-4">⚠️ Cámara no disponible</div>
-                      <p style={{ color: 'var(--mtg-text-light)' }}>
-                        {cameraErrorMessage || 'No fue posible acceder a la cámara. Revisa permisos del navegador y vuelve a intentarlo.'}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Camera size={48} className="mx-auto mb-3" style={{ color: 'var(--mtg-gold-bright)' }} />
-                      <p style={{ color: 'var(--mtg-text-light)' }} className="mb-1">Escáner de Cartas MTG</p>
-                      <p className="text-muted small">
-                        Utiliza tu cámara o sube una foto para identificar la carta.
-                      </p>
-                    </>
-                  )}
-                </div>
+                  </>
+                ) : cameraError ? (
+                  <div 
+                    className="rounded p-5 text-center mb-4"
+                    style={{ 
+                      background: 'rgba(220, 38, 38, 0.1)', 
+                      border: '1px solid rgba(220, 38, 38, 0.3)'
+                    }}
+                  >
+                    <div className="text-danger mb-3 fs-4">⚠️ Cámara no disponible</div>
+                    <p style={{ color: 'var(--mtg-text-light)' }} className="mb-0">
+                      {cameraErrorMessage || 'No fue posible acceder a la cámara. Revisa permisos del navegador y vuelve a intentarlo.'}
+                    </p>
+                  </div>
+                ) : null}
+
+                {!previewUrl && (
+                  <div 
+                    className="rounded p-4 text-center mb-4"
+                    style={{ 
+                      background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%)',
+                      border: '2px dashed rgba(212, 175, 55, 0.3)'
+                    }}
+                  >
+                    <Camera size={48} className="mx-auto mb-3" style={{ color: 'var(--mtg-gold-bright)' }} />
+                    <p style={{ color: 'var(--mtg-text-light)' }} className="mb-1 fw-bold">Escáner de Cartas MTG</p>
+                    <p className="text-muted small">
+                      Selecciona una opción para identificar tu carta
+                    </p>
+                  </div>
+                )}
                 
                 <input
                   type="file"
@@ -646,43 +672,61 @@ const InventoryPage = () => {
                   className="d-none"
                 />
 
-                <div className="d-flex flex-column gap-2 mt-3">
-                  {!cameraError && (
-                    <Button
-                      className="btn-mtg-primary d-flex align-items-center justify-content-center gap-2"
-                      onClick={startCamera}
-                    >
-                      <Camera size={20} />
-                      <span>Activar Cámara</span>
-                    </Button>
-                  )}
-                  
-                  <Button
-                    className="btn-mtg-secondary d-flex align-items-center justify-content-center gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={scanning}
-                  >
-                    {scanning ? (
-                      <>
-                        <Spinner size="sm" />
-                        <span>Procesando...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Plus size={20} />
-                        <span>Subir Foto (.jpg/.png)</span>
-                      </>
+                {!previewUrl && (
+                  <div className="d-flex flex-column gap-3 mt-3">
+                    {!cameraError && (
+                      <Button
+                        className="btn-mtg-primary d-flex align-items-center justify-content-center gap-3 py-3"
+                        onClick={startCamera}
+                        style={{ fontSize: '1.1rem', background: 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)' }}
+                      >
+                        <Camera size={24} />
+                        <span>📷 Usar Cámara</span>
+                      </Button>
                     )}
-                  </Button>
-                  
-                  <Button
-                    variant="link"
-                    className="text-muted"
-                    onClick={closeScanner}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
+                    
+                    <Button
+                      className="d-flex align-items-center justify-content-center gap-3 py-3"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={scanning}
+                      style={{ 
+                        fontSize: '1.1rem',
+                        background: 'rgba(212, 175, 55, 0.15)',
+                        color: 'var(--mtg-gold-bright)',
+                        border: '2px solid rgba(212, 175, 55, 0.4)',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'rgba(212, 175, 55, 0.25)';
+                        e.target.style.borderColor = 'rgba(212, 175, 55, 0.6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'rgba(212, 175, 55, 0.15)';
+                        e.target.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+                      }}
+                    >
+                      {scanning ? (
+                        <>
+                          <Spinner size="sm" />
+                          <span>Procesando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={24} />
+                          <span>📁 Subir Imagen</span>
+                        </>
+                      )}
+                    </Button>
+                    
+                    <Button
+                      variant="link"
+                      className="text-muted"
+                      onClick={closeScanner}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
