@@ -33,33 +33,25 @@ Plataforma integral para jugadores, coleccionistas y vendedores de Magic: The Ga
 
 ```
 MTG-Nexus-Hub/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/      # Lógica de negocio
-│   │   ├── routes/           # Definición de rutas
-│   │   ├── services/         # Integraciones externas (Scryfall)
-│   │   ├── middleware/       # Auth, validaciones
-│   │   ├── utils/            # Utilidades y helpers
-│   │   └── server.js         # Punto de entrada
-│   ├── prisma/
-│   │   └── schema.prisma     # Esquema de base de datos
-│   ├── .env.example
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/       # Componentes reutilizables
-│   │   ├── pages/           # Páginas principales
-│   │   ├── services/        # Servicios API
-│   │   ├── hooks/           # Custom hooks
-│   │   ├── context/         # Context API (Auth)
-│   │   └── App.jsx
-│   ├── public/
-│   ├── tailwind.config.js
-│   └── package.json
-│
+├── 📁 backend/               # ⚙️ Servidor backends/
+├── 📁 apps/                  # 🎨 Aplicaciones React multi-versión
+│   ├── accessible-usable/    # 🟢 Versión principal (puerto 3000)
+│   ├── non-accessible/       # 🔴 Variante (puerto 3001)
+│   └── non-usable/           # 🟡 Variante (puerto 3002)
+├── 📁 docs/                  # 📚 Documentación
+│   ├── ARCHITECTURE.md
+│   ├── INSTALLATION.md
+│   ├── TESTING.md
+│   └── ...
+├── 📁 scripts/               # 🔧 Scripts de inicio y despliegue
+│   ├── start-all.ps1
+│   ├── start-all.sh
+│   └── ...
 └── README.md
 ```
+
+**Nota:** Las 3 apps comparten el mismo backend y contexto de autenticación. 
+El login centralizado en `apps/accessible-usable/` permite elegir cuál versión usar.
 
 ## 🔧 Instalación y Configuración
 
@@ -92,10 +84,10 @@ Si quieres empezar con datos de prueba incluyendo un usuario admin:
 ```bash
 # Desde la raíz del proyecto
 # Windows
-reset-db.bat
+scripts\reset-db.bat
 
 # Linux/Mac
-./reset-db.sh
+./scripts/reset-db.sh
 ```
 
 Esto crea:
@@ -103,17 +95,19 @@ Esto crea:
 - 2 mazos de ejemplo
 - Cartas de ejemplo cargadas
 
-Ver [DATABASE_RESET.md](./DATABASE_RESET.md) para más opciones.
+Ver [docs/DATABASE_RESET.md](./docs/DATABASE_RESET.md) para más opciones.
 
-### Frontend
+### Frontend (Aplicación Principal)
 
 ```bash
-cd frontend
+cd apps/accessible-usable
 npm install
 
 # Iniciar aplicación React
 npm start
 ```
+
+Esto inicia la versión principal en `http://localhost:3000`.
 
 ## 🔑 Variables de Entorno
 

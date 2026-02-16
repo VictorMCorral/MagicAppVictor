@@ -14,10 +14,27 @@ const app = express();
 // ============================================
 
 // CORS
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+// Permitir múltiples orígenes en desarrollo (3000, 3001, 3002)
+const corsOptions = {
   credentials: true
-}));
+};
+
+if (process.env.NODE_ENV === 'development') {
+  // En desarrollo, acepta localhost en cualquier puerto
+  corsOptions.origin = (origin, callback) => {
+    // Permitir requests sin origin (como curl o requests del servidor)
+    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS no permitido'));
+    }
+  };
+} else {
+  // En producción, usar solo el origen configurado
+  corsOptions.origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+}
+
+app.use(cors(corsOptions));
 
 // Body parser
 app.use(express.json());
