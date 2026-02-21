@@ -1,0 +1,152 @@
+/* Sitemap Page - Responsive SVG Design */
+
+.sitemap-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+/* Header */
+.sitemap-header {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+}
+
+.sitemap-header h1 {
+  font-size: clamp(1.5rem, 5vw, 3rem);
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  margin: 0 0 10px 0;
+}
+
+.sitemap-header p {
+  color: rgba(255,255,255,0.85);
+  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  margin: 0;
+}
+
+/* Container del diagrama */
+.sitemap-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* SVG responsive */
+.sitemap-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.sitemap-svg g {
+  cursor: pointer;
+}
+
+.sitemap-svg g:hover rect:not([fill="rgba(0,0,0,0.15)"]) {
+  filter: brightness(1.15);
+}
+
+.sitemap-svg text {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Leyenda */
+.sitemap-legend {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 25px;
+  flex-wrap: wrap;
+  padding: 0 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legend-item span {
+  color: white;
+  font-weight: 500;
+  font-size: clamp(0.75rem, 2vw, 1rem);
+}
+
+/* Footer */
+.sitemap-footer {
+  text-align: center;
+  margin-top: 20px;
+  color: rgba(255,255,255,0.7);
+  font-size: clamp(0.75rem, 2vw, 1rem);
+}
+
+.sitemap-footer p {
+  margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sitemap-page {
+    padding: 15px 10px;
+  }
+
+  .sitemap-container {
+    padding: 15px 10px;
+    border-radius: 12px;
+  }
+
+  .sitemap-header {
+    margin-bottom: 15px;
+  }
+
+  .sitemap-legend {
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sitemap-page {
+    padding: 10px 5px;
+  }
+
+  .sitemap-container {
+    padding: 10px 5px;
+    border-radius: 8px;
+  }
+
+  .sitemap-legend {
+    gap: 8px;
+  }
+}
+
+/* Touch devices - larger hit areas */
+@media (hover: none) {
+  .sitemap-svg g rect {
+    stroke-width: 4px;
+  }
+}

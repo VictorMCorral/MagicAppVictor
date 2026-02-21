@@ -198,6 +198,9 @@ const InventoryPage = () => {
   // Iniciar cámara
   const startCamera = useCallback(async () => {
     try {
+      setCameraError(false);
+      setCameraErrorMessage('');
+      
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('MEDIA_DEVICES_NO_DISPONIBLE');
       }
@@ -444,13 +447,24 @@ const InventoryPage = () => {
   }, [stopCamera]);
 
   useEffect(() => {
-    if (showScanner) {
-      startCamera();
-    } else {
-      stopCamera();
+    try {
+      if (showScanner) {
+        startCamera();
+      } else {
+        stopCamera();
+      }
+    } catch (error) {
+      console.error('Error in camera effect:', error);
+      setShowScanner(false);
     }
 
-    return () => stopCamera();
+    return () => {
+      try {
+        stopCamera();
+      } catch (error) {
+        console.error('Error stopping camera:', error);
+      }
+    };
   }, [showScanner, startCamera, stopCamera]);
 
   // Calcular estadísticas

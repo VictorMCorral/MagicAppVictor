@@ -11,6 +11,7 @@ import DeckBuilderPage from './pages/DeckBuilderPage';
 import DeckViewPage from './pages/DeckViewPage';
 import CardSearchPage from './pages/CardSearchPage';
 import InventoryPage from './pages/InventoryPage';
+import SitemapPage from './pages/SitemapPage';
 
 // Componentes
 import PrivateRoute from './components/PrivateRoute';
@@ -68,6 +69,14 @@ const AppContent = () => {
               }
             />
             <Route
+              path="/decks"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
               path="/inventory"
               element={
                 <PrivateRoute>
@@ -91,6 +100,9 @@ const AppContent = () => {
                 </PrivateRoute>
               }
             />
+
+            {/* Sitemap */}
+            <Route path="/sitemap" element={<SitemapPage />} />
 
             {/* Ruta 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -11,6 +11,7 @@ import DeckBuilderPage from './pages/DeckBuilderPage';
 import DeckViewPage from './pages/DeckViewPage';
 import CardSearchPage from './pages/CardSearchPage';
 import InventoryPage from './pages/InventoryPage';
+import SitemapPage from './pages/SitemapPage';
 
 // Componentes
 import PrivateRoute from './components/PrivateRoute';
@@ -54,12 +55,21 @@ const AppContent = () => {
         />
 
         {/* Rutas públicas */}
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/cards" element={<CardSearchPage />} />
 
             {/* Rutas protegidas */}
             <Route
               path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <DashboardPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/decks"
               element={
                 <PrivateRoute>
                   <DashboardPage />
@@ -90,6 +100,9 @@ const AppContent = () => {
                 </PrivateRoute>
               }
             />
+
+            {/* Sitemap */}
+            <Route path="/sitemap" element={<SitemapPage />} />
 
             {/* Ruta 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -259,7 +259,7 @@ const DeckViewPage = () => {
                       
                       <button
                         onClick={(e) => { e.stopPropagation(); handleRemoveCard(card.id); }}
-                        className="p-2 rounded-full text-red-500/70 hover:text-red-400 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="p-2 rounded-full text-red-500 hover:text-red-300 hover:bg-red-500/20 transition-colors"
                         title="Eliminar carta"
                       >
                         <Trash2 size={16} />

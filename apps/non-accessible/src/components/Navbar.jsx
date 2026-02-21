@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Home, Search, BookOpen, LogIn, LogOut, User, Wand2 } from 'lucide-react';
+import { Home, Search, BookOpen, LogIn, LogOut, User, Wand2, Map } from 'lucide-react';
 import { Navbar as BsNavbar, Nav, Container, Button } from 'react-bootstrap';
 
 const Navbar = () => {
@@ -46,6 +46,11 @@ const Navbar = () => {
             <Nav.Link as={Link} to="/cards" className="nav-link-mtg d-flex align-items-center gap-2">
               <Search size={18} />
               <span>Buscar</span>
+            </Nav.Link>
+
+            <Nav.Link as={Link} to="/sitemap" className="nav-link-mtg d-flex align-items-center gap-2">
+              <Map size={18} />
+              <span>Mapa Web</span>
             </Nav.Link>
 
             {isAuthenticated ? (

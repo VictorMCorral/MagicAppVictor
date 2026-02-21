@@ -159,7 +159,7 @@ const DashboardPage = () => {
                     </div>
 
                     <Link
-                      to={`/deck/${deck.id}`}
+                      to={`/decks/${deck.id}`}
                       className="btn btn-mtg-primary w-100 mt-auto"
                     >
                       Ver Mazo
