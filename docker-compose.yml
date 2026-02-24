@@ -14,9 +14,12 @@ services:
     volumes:
       - mtg_nexus_db:/var/lib/postgresql/data
 
-  backend:
-    build: ./backend
-    container_name: mtg-nexus-backend
+  app:
+    build:
+      context: .
+      args:
+        - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:5000/api}
+    container_name: mtg-nexus-app
     restart: unless-stopped
     depends_on:
       - db
@@ -24,21 +27,11 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-mtg_user}:${POSTGRES_PASSWORD:-mtg_password}@db:5432/${POSTGRES_DB:-mtg_nexus}?schema=public
       JWT_SECRET: ${JWT_SECRET:-super_secret_key_change_me}
       PORT: 5000
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
     ports:
-      - "5000:5000"
-
-  frontend:
-    build:
-      context: ./frontend
-      args:
-        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
-    container_name: mtg-nexus-frontend
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
+      - "3000:3000" # Front Principal (Accesible)
+      - "3001:3001" # Front Non-Accessible
+      - "3002:3002" # Front Non-Usable
+      - "5000:5000" # Backend API
 
 volumes:
   mtg_nexus_db:

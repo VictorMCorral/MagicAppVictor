@@ -152,7 +152,7 @@
 |------------|---------|-----|
 | React | 18.2 | Framework UI |
 | React Router | 6.21 | Navegación |
-| Tailwind CSS | 3.4 | Estilos |
+| Bootstrap | 5.3 | Estilos |
 | Lucide Icons | 0.314 | Iconos |
 | Axios | 1.6 | Cliente HTTP |
 
@@ -277,7 +277,7 @@ El **MVP v1.0 de MTG Nexus Hub** está **100% completado** y listo para:
 
 El proyecto incluye:
 - **Backend robusto** con API REST completa
-- **Frontend moderno** con React y Tailwind
+- **Frontend moderno** con React y Bootstrap
 - **Integración exitosa** con Scryfall API
 - **Documentación exhaustiva** para desarrollo y deployment
 - **Arquitectura escalable** para futuras features

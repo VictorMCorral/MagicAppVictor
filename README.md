@@ -15,7 +15,7 @@ Plataforma integral para jugadores, coleccionistas y vendedores de Magic: The Ga
 
 ### Frontend
 - **React.js** 18+
-- **Tailwind CSS** - Estilos
+- **Bootstrap 5** - Estilos y Componentes
 - **Lucide Icons** - Iconografía
 - **Axios** - Cliente HTTP
 

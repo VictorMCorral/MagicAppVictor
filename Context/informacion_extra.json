@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Plataforma integral para jugadores, coleccionistas y vendedores de Magic: The Gathering con gestión de mazos, escaneo OCR y tablero virtual manual.",
     "tech_stack": {
-        "frontend": "React.js (Tailwind CSS, Lucide Icons)",
+        "frontend": "React.js (Bootstrap 5, Lucide Icons)",
         "backend": "Node.js (Express)",
         "database": "PostgreSQL (Prisma ORM) por su robustez con datos relacionales",
         "realtime": "WebSockets (Socket.io) para el tablero manual",

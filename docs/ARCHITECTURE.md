@@ -7,7 +7,7 @@ MTG Nexus Hub sigue una arquitectura **Cliente-Servidor** con separación clara 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      CLIENTE (Frontend)                      │
-│  React.js + Tailwind CSS + Lucide Icons                    │
+│  React.js + Bootstrap 5 + Lucide Icons                       │
 │  ├─ Context API (Autenticación)                            │
 │  ├─ React Router (Navegación)                              │
 │  ├─ Axios (HTTP Client)                                    │

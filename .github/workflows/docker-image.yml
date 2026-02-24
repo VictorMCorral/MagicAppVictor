@@ -33,7 +33,8 @@ jobs:
         with:
           context: . # Carpeta donde está el Dockerfile
           push: true
-          # Reemplaza 'usuario' y 'repositorio' con tus datos
+          build-args: |
+            REACT_APP_API_URL=${{ secrets.REACT_APP_API_URL || 'http://localhost:5000/api' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/magic-app:latest
             ${{ secrets.DOCKER_USERNAME }}/magic-app:${{ github.run_number }}

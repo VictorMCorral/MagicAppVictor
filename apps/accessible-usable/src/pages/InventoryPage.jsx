@@ -661,240 +661,235 @@ const InventoryPage = () => {
           </Modal.Header>
           
           <Modal.Body>
-            {cameraActive ? (
-              <div>
-                <div className="position-relative rounded overflow-hidden mb-3" style={{ border: '1px solid rgba(212, 175, 55, 0.5)', background: '#000' }}>
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-100"
-                    style={{ height: '320px', objectFit: 'cover' }}
-                  />
-                  {previewUrl && (
-                    <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                      <img src={previewUrl} alt="Preview" style={{ maxHeight: '100%', objectFit: 'contain' }} />
-                    </div>
-                  )}
-                </div>
-
-                <canvas ref={canvasRef} className="d-none" />
-
-                <div className="d-flex gap-2">
-                  <Button
-                    className="btn-mtg-primary flex-grow-1"
-                    onClick={captureAndScan}
-                    disabled={scanning}
-                  >
-                    {scanning ? '🔄 Procesando...' : '📸 Capturar y Escanear'}
-                  </Button>
-                  <Button
-                    className="btn-mtg-secondary flex-grow-1"
-                    onClick={closeScanner}
-                  >
-                    Cerrar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                {previewUrl && !cameraError ? (
-                  <>
-                    <div 
-                      className="rounded overflow-hidden mb-3"
-                      style={{ border: '2px solid rgba(212, 175, 55, 0.5)', background: '#000' }}
-                    >
-                      <img src={previewUrl} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
-                    </div>
-                    <div className="d-flex gap-2">
-                      <Button 
-                        className="btn-mtg-secondary flex-grow-1"
-                        onClick={() => { setPreviewUrl(null); setPendingImageUrl(null); }}
-                      >
-                        Subir otra imagen
-                      </Button>
-                      <Button
-                        className="btn-mtg-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                        onClick={() => performOCR(pendingImageUrl || previewUrl)}
-                        disabled={scanning || (!pendingImageUrl && !previewUrl)}
-                      >
-                        {scanning ? (
-                          <>
-                            <Spinner size="sm" />
-                            <span>Analizando...</span>
-                          </>
-                        ) : (
-                          <span>🔍 Confirmar y Escanear</span>
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                ) : cameraError ? (
-                  <div 
-                    className="rounded p-5 text-center mb-4"
-                    style={{ 
-                      background: 'rgba(220, 38, 38, 0.1)', 
-                      border: '1px solid rgba(220, 38, 38, 0.3)'
-                    }}
-                  >
-                    <div className="text-danger mb-3 fs-4">⚠️ Cámara no disponible</div>
-                    <p style={{ color: 'var(--mtg-text-light)' }} className="mb-0">
-                      {cameraErrorMessage || 'No fue posible acceder a la cámara. Revisa permisos del navegador y vuelve a intentarlo.'}
-                    </p>
-                  </div>
-                ) : null}
-
-                {!previewUrl && (
-                  <div 
-                    className="rounded p-4 text-center mb-4"
-                    style={{ 
-                      background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%)',
-                      border: '2px dashed rgba(212, 175, 55, 0.3)'
-                    }}
-                  >
-                    <Camera size={48} className="mx-auto mb-3" style={{ color: 'var(--mtg-gold-bright)' }} />
-                    <p style={{ color: 'var(--mtg-text-light)' }} className="mb-1 fw-bold">Escáner de Cartas MTG</p>
-                    <p className="text-muted small">
-                      Selecciona una opción para identificar tu carta
-                    </p>
-                  </div>
-                )}
-                
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="image/*"
-                  className="d-none"
-                />
-
-                {!previewUrl && (
-                  <div className="d-flex flex-column gap-3 mt-3">
-                    {!cameraError && (
-                      <Button
-                        className="btn-mtg-primary d-flex align-items-center justify-content-center gap-3 py-3"
-                        onClick={startCamera}
-                        style={{ fontSize: '1.1rem', background: 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)' }}
-                      >
-                        <Camera size={24} />
-                        <span>📷 Usar Cámara</span>
-                      </Button>
-                    )}
-                    
-                    <Button
-                      className="d-flex align-items-center justify-content-center gap-3 py-3"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={scanning}
-                      style={{ 
-                        fontSize: '1.1rem',
-                        background: 'rgba(212, 175, 55, 0.15)',
-                        color: 'var(--mtg-gold-bright)',
-                        border: '2px solid rgba(212, 175, 55, 0.4)',
-                        transition: 'all 0.3s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(212, 175, 55, 0.25)';
-                        e.target.style.borderColor = 'rgba(212, 175, 55, 0.6)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(212, 175, 55, 0.15)';
-                        e.target.style.borderColor = 'rgba(212, 175, 55, 0.4)';
-                      }}
-                    >
-                      {scanning ? (
-                        <>
-                          <Spinner size="sm" />
-                          <span>Procesando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus size={24} />
-                          <span>📁 Subir Imagen</span>
-                        </>
+            {/* Solo mostrar controles de escaneo si no hay una carta seleccionada para confirmar */}
+            {!selectedCard && (
+              <>
+                {cameraActive ? (
+                  <div>
+                    <div className="position-relative rounded overflow-hidden mb-3" style={{ border: '1px solid rgba(212, 175, 55, 0.5)', background: '#000' }}>
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-100"
+                        style={{ height: '320px', objectFit: 'cover' }}
+                      />
+                      {previewUrl && (
+                        <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+                          <img src={previewUrl} alt="Preview" style={{ maxHeight: '100%', objectFit: 'contain' }} />
+                        </div>
                       )}
-                    </Button>
-                    
-                    <Button
-                      variant="link"
-                      className="text-muted"
-                      onClick={closeScanner}
-                    >
-                      Cancelar
-                    </Button>
+                    </div>
+
+                    <canvas ref={canvasRef} className="d-none" />
+
+                    <div className="d-flex gap-2">
+                      <Button
+                        className="btn-mtg-primary flex-grow-1"
+                        onClick={captureAndScan}
+                        disabled={scanning}
+                      >
+                        {scanning ? '🔄 Procesando...' : '📸 Capturar y Escanear'}
+                      </Button>
+                      <Button
+                        className="btn-mtg-secondary flex-grow-1"
+                        onClick={closeScanner}
+                      >
+                        Cerrar
+                      </Button>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
-
-            {recognizedText && (
-              <div 
-                className="rounded p-3 mt-3"
-                style={{ background: 'var(--mtg-bg-darker)', border: '1px solid rgba(212, 175, 55, 0.3)' }}
-              >
-                <p className="small text-muted mb-2">Texto reconocido:</p>
-                <p 
-                  className="font-monospace small mb-0 overflow-auto"
-                  style={{ color: 'var(--mtg-text-light)', maxHeight: '100px', wordBreak: 'break-word' }}
-                >
-                  {recognizedText}
-                </p>
-              </div>
-            )}
-
-            {/* Resultados de búsqueda OCR */}
-            {(isSearching || foundCards.length > 0) && !selectedCard && (
-              <div className="mt-4 pt-4 border-top" style={{ borderColor: 'rgba(212, 175, 55, 0.2) !important' }}>
-                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: 'var(--mtg-gold-bright)' }}>
-                  {isSearching ? (
-                    <>
-                      <Spinner size="sm" className="me-2" />
-                      Buscando coincidencias...
-                    </>
-                  ) : (
-                    '✨ Cartas detectadas'
-                  )}
-                </h5>
-                
-                <div className="d-flex flex-column gap-2">
-                  {foundCards.map((card) => {
-                    const imageUris = parseImageUris(card.image_uris, card.imageUrl);
-                    return (
+                ) : (
+                  <div>
+                    {previewUrl ? (
+                      <>
+                        <div 
+                          className="rounded overflow-hidden mb-3"
+                          style={{ border: '2px solid rgba(212, 175, 55, 0.5)', background: '#000' }}
+                        >
+                          <img src={previewUrl} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+                        </div>
+                        <div className="d-flex gap-2">
+                          <Button 
+                            className="btn-mtg-secondary flex-grow-1"
+                            onClick={() => { 
+                              setPreviewUrl(null); 
+                              setPendingImageUrl(null);
+                              setRecognizedText('');
+                              setFoundCards([]);
+                            }}
+                          >
+                            Subir otra imagen
+                          </Button>
+                          <Button
+                            className="btn-mtg-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                            onClick={() => performOCR(pendingImageUrl || previewUrl)}
+                            disabled={scanning || (!pendingImageUrl && !previewUrl)}
+                          >
+                            {scanning ? (
+                              <>
+                                <Spinner size="sm" />
+                                <span>Analizando...</span>
+                              </>
+                            ) : (
+                              <span>🔍 Confirmar y Escanear</span>
+                            )}
+                          </Button>
+                        </div>
+                      </>
+                    ) : cameraError ? (
                       <div 
-                        key={card.id} 
-                        className="d-flex align-items-center justify-content-between p-2 rounded"
+                        className="rounded p-5 text-center mb-4"
                         style={{ 
-                          background: 'var(--mtg-bg-dark)', 
-                          border: '1px solid rgba(212, 175, 55, 0.2)',
-                          transition: 'border-color 0.2s'
+                          background: 'rgba(220, 38, 38, 0.1)', 
+                          border: '1px solid rgba(220, 38, 38, 0.3)'
                         }}
                       >
-                        <div className="d-flex align-items-center gap-2">
-                          {imageUris?.small && (
-                            <img src={imageUris.small} alt={card.name} className="rounded" style={{ width: '48px', height: '64px', objectFit: 'contain' }} />
-                          )}
-                          <div>
-                            <div className="fw-bold" style={{ color: 'var(--mtg-text-light)' }}>{card.name}</div>
-                            <div className="small text-muted">{card.set_name} · {card.prices?.eur || card.prices?.usd || '?'}€</div>
-                          </div>
-                        </div>
-                        <Button 
-                          className="btn-mtg-primary rounded-circle p-2"
-                          onClick={() => handleSelectCard(card)}
-                          title="Añadir al inventario"
+                        <div className="text-danger mb-3 fs-4">⚠️ Cámara no disponible</div>
+                        <p style={{ color: 'var(--mtg-text-light)' }} className="mb-0">
+                          {cameraErrorMessage || 'No fue posible acceder a la cámara. Revisa permisos del navegador y vuelve a intentarlo.'}
+                        </p>
+                      </div>
+                    ) : null}
+
+                    {!previewUrl && (
+                      <div 
+                        className="rounded p-4 text-center mb-4"
+                        style={{ 
+                          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.04) 100%)',
+                          border: '2px dashed rgba(212, 175, 55, 0.3)'
+                        }}
+                      >
+                        <Camera size={48} className="mx-auto mb-3" style={{ color: 'var(--mtg-gold-bright)' }} />
+                        <p style={{ color: 'var(--mtg-text-light)' }} className="mb-1 fw-bold">Escáner de Cartas MTG</p>
+                        <p className="text-muted small">
+                          Selecciona una opción para identificar tu carta
+                        </p>
+                      </div>
+                    )}
+                    
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      accept="image/*"
+                      className="d-none"
+                    />
+
+                    {!previewUrl && (
+                      <div className="d-flex flex-column gap-3 mt-3">
+                        {!cameraError && (
+                          <Button
+                            className="btn-mtg-primary d-flex align-items-center justify-content-center gap-3 py-3"
+                            onClick={startCamera}
+                            style={{ fontSize: '1.1rem', background: 'linear-gradient(135deg, #d4af37 0%, #b8860b 100%)' }}
+                          >
+                            <Camera size={24} />
+                            <span>📷 Usar Cámara</span>
+                          </Button>
+                        )}
+                        
+                        <Button
+                          className="d-flex align-items-center justify-content-center gap-3 py-3"
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={scanning}
+                          style={{ 
+                            fontSize: '1.1rem',
+                            background: 'rgba(212, 175, 55, 0.15)',
+                            color: 'var(--mtg-gold-bright)',
+                            border: '2px solid rgba(212, 175, 55, 0.4)',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.background = 'rgba(212, 175, 55, 0.25)';
+                            e.target.style.borderColor = 'rgba(212, 175, 55, 0.6)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.background = 'rgba(212, 175, 55, 0.15)';
+                            e.target.style.borderColor = 'rgba(212, 175, 55, 0.4)';
+                          }}
                         >
-                          <Plus size={20} />
+                          {scanning ? (
+                            <>
+                              <Spinner size="sm" />
+                              <span>Procesando...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={24} />
+                              <span>📁 Subir Imagen</span>
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="link"
+                          className="text-muted"
+                          onClick={closeScanner}
+                        >
+                          Cancelar
                         </Button>
                       </div>
-                    );
-                  })}
-                  
-                  {!isSearching && foundCards.length === 0 && recognizedText && (
-                    <p className="text-muted text-center py-3 fst-italic mb-0">
-                      No se encontraron cartas exactas. Intenta capturar la imagen más cerca del nombre.
-                    </p>
-                  )}
-                </div>
-              </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Resultados de búsqueda OCR */}
+                {(isSearching || foundCards.length > 0) && (
+                  <div className="mt-4 pt-4 border-top" style={{ borderColor: 'rgba(212, 175, 55, 0.2) !important' }}>
+                    <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: 'var(--mtg-gold-bright)' }}>
+                      {isSearching ? (
+                        <>
+                          <Spinner size="sm" className="me-2" />
+                          Buscando coincidencias...
+                        </>
+                      ) : (
+                        '✨ Cartas detectadas'
+                      )}
+                    </h5>
+                    
+                    <div className="d-flex flex-column gap-2">
+                      {foundCards.map((card) => {
+                        const imageUris = parseImageUris(card.image_uris, card.imageUrl);
+                        return (
+                          <div 
+                            key={card.id} 
+                            className="d-flex align-items-center justify-content-between p-2 rounded"
+                            style={{ 
+                              background: 'var(--mtg-bg-dark)', 
+                              border: '1px solid rgba(212, 175, 55, 0.2)',
+                              transition: 'border-color 0.2s'
+                            }}
+                          >
+                            <div className="d-flex align-items-center gap-2">
+                              {imageUris?.small && (
+                                <img src={imageUris.small} alt={card.name} className="rounded" style={{ width: '48px', height: '64px', objectFit: 'contain' }} />
+                              )}
+                              <div>
+                                <div className="fw-bold" style={{ color: 'var(--mtg-text-light)' }}>{card.name}</div>
+                                <div className="small text-muted">{card.set_name} · {card.prices?.eur || card.prices?.usd || '?'}€</div>
+                              </div>
+                            </div>
+                            <Button 
+                              className="btn-mtg-primary rounded-circle p-2"
+                              onClick={() => handleSelectCard(card)}
+                              title="Añadir al inventario"
+                            >
+                              <Plus size={20} />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                      
+                      {!isSearching && foundCards.length === 0 && recognizedText && (
+                        <p className="text-muted text-center py-3 fst-italic mb-0">
+                          No se encontraron cartas exactas. Intenta capturar la imagen más cerca del nombre.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Confirmación y Cantidad */}

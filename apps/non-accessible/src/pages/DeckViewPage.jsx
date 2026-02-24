@@ -215,19 +215,20 @@ const DeckViewPage = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
               {deck.cards.map((card) => (
-                <div key={card.id} className="deck-card-item group relative">
-                  
-                  {/* Badge de Cantidad - Estilo mejorado */}
-                  <div className="absolute -top-3 -right-3 z-20">
-                    <span className="flex items-center justify-center w-8 h-8 bg-yellow-500 text-black font-extrabold text-sm rounded-full shadow-lg border-2 border-[#1a1b26]">
-                      {card.quantity}
-                    </span>
-                  </div>
+                <div key={card.id} className="col">
+                  <div className="deck-card-item h-100 position-relative">
+                    
+                    {/* Badge de Cantidad - Estilo mejorado */}
+                    <div className="position-absolute top-0 end-0 translate-middle z-3">
+                      <span className="d-flex align-items-center justify-content-center w-8 h-8 bg-warning text-black fw-bold small rounded-circle shadow border border-dark">
+                        {card.quantity}
+                      </span>
+                    </div>
 
-                  {/* Imagen de carta con efecto hover */}
-                  <div className="deck-card-image-wrapper">
+                    {/* Imagen de carta con efecto hover */}
+                    <div className="deck-card-image-wrapper">
                     {card.imageUrl ? (
                       <img
                         src={card.imageUrl}
@@ -267,9 +268,10 @@ const DeckViewPage = () => {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
+        )}
         </div>
       </div>
 
