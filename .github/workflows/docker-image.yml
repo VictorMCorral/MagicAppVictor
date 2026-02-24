@@ -35,5 +35,5 @@ jobs:
           push: true
           # Reemplaza 'usuario' y 'repositorio' con tus datos
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/magicApp:latest
-            ${{ secrets.DOCKER_USERNAME }}/magicApp:${{ github.run_number }}
+            ${{ secrets.DOCKER_USERNAME }}/magic-app:latest
+            ${{ secrets.DOCKER_USERNAME }}/magic-app:${{ github.run_number }}
