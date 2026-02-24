@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import DeckViewPage from './DeckViewPage';
 import deckService from '../services/deckService';
@@ -92,5 +92,51 @@ describe('DeckViewPage', () => {
     });
     
     consoleSpy.mockRestore();
+  });
+
+  it('muestra modal de importación al pulsar importar', async () => {
+    deckService.getDeckById.mockResolvedValue({ data: mockDeck });
+
+    await act(async () => {
+      render(
+        <BrowserRouter>
+          <DeckViewPage />
+        </BrowserRouter>
+      );
+    });
+
+    await waitFor(() => expect(screen.getByText('Test Deck')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTitle('Subir lista'));
+
+    expect(screen.getByText('Importar Lista de Mazo')).toBeInTheDocument();
+    expect(screen.getByText('Procesar Importación')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/4 Lightning Bolt/i)).toBeInTheDocument();
+  });
+
+  it('botón importar se deshabilita mientras importa', async () => {
+    deckService.getDeckById.mockResolvedValue({ data: mockDeck });
+    deckService.importDeck.mockImplementation(() => new Promise(() => {}));
+
+    await act(async () => {
+      render(
+        <BrowserRouter>
+          <DeckViewPage />
+        </BrowserRouter>
+      );
+    });
+
+    await waitFor(() => expect(screen.getByText('Test Deck')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByTitle('Subir lista'));
+    fireEvent.change(screen.getByPlaceholderText(/4 Lightning Bolt/i), {
+      target: { value: '4 Lightning Bolt' },
+    });
+
+    fireEvent.click(screen.getByText('Procesar Importación'));
+
+    await waitFor(() =>
+      expect(screen.getByText('Importando...')).toBeInTheDocument()
+    );
   });
 });

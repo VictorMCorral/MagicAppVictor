@@ -13,6 +13,7 @@ const DeckViewPage = () => {
   const [cardSearch, setCardSearch] = useState('');
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
+  const [importing, setImporting] = useState(false);
 
   useEffect(() => {
     loadDeck();
@@ -73,6 +74,7 @@ const DeckViewPage = () => {
 
   const handleImport = async () => {
     try {
+      setImporting(true);
       await deckService.importDeck(id, importText, false);
       setImportText('');
       setShowImport(false);
@@ -81,6 +83,8 @@ const DeckViewPage = () => {
     } catch (error) {
       console.error('Error al importar:', error);
       alert('Error al importar mazo');
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -348,10 +352,19 @@ const DeckViewPage = () => {
                 Cancelar
               </button>
               <button 
-                onClick={handleImport} 
-                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20 transition"
+                onClick={handleImport}
+                disabled={importing || !importText.trim()}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Procesar Importación
+                {importing ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Importando...
+                  </>
+                ) : 'Procesar Importación'}
               </button>
             </div>
           </div>

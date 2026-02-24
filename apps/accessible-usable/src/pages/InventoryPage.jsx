@@ -88,6 +88,7 @@ const InventoryPage = () => {
   const [cameraError, setCameraError] = useState(false);
   const [cameraErrorMessage, setCameraErrorMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [pendingImageUrl, setPendingImageUrl] = useState(null);
   const fileInputRef = useRef(null);
 
   // Guardar inventario en localStorage cada vez que cambie
@@ -108,52 +109,29 @@ const InventoryPage = () => {
     setIsSearching(true);
     setFoundCards([]);
     try {
-      // Extraer el nombre de carta de manera inteligente (primera línea significativa)
-      const lines = text.split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 2);
-      
-      // El nombre de la carta está típicamente al inicio
-      let cardName = '';
-      for (const line of lines) {
-        // Buscar primera línea que tenga caracteres alfabéticos
-        if (/[a-zA-Z]/.test(line) && !line.match(/^\d+/)) {
-          cardName = line
-            .replace(/[^a-zA-Z0-9\s,'\-–]/g, '') // Limpiar caracteres especiales
-            .trim()
-            .substring(0, 100); // Limitar a 100 caracteres
-          break;
-        }
-      }
+      // Usar extractCardName mejorado para obtener el nombre de la carta
+      const cardName = extractCardName(text);
 
-      if (!cardName || cardName.length < 3) return;
+      if (!cardName || cardName.length < 2) return;
+
+      console.log('Nombre de carta extraído por OCR:', cardName);
 
       let allResults = [];
-      let queries = [];
+      const queries = [];
 
-      // Búsqueda 1: Búsqueda exacta por nombre completo (prioritario)
-      if (cardName.includes(' ')) {
-        queries.push(`!"${cardName}"`);
-      }
-      
-      // Búsqueda 2: Búsqueda exacta por nombre completo sin comillas
+      // Query 1: nombre exacto completo
       queries.push(cardName);
 
-      // Búsqueda 3: Primeras 3 palabras si tiene múltiples palabras
-      if (cardName.includes(' ')) {
-        const firstWords = cardName.split(' ').slice(0, 3).join(' ');
-        if (firstWords !== cardName) {
-          queries.push(firstWords);
-        }
+      // Query 2: primeras 3 palabras si tiene más
+      const words = cardName.split(' ');
+      if (words.length > 3) {
+        queries.push(words.slice(0, 3).join(' '));
       }
 
-      // Búsqueda 4: Primera palabra sola (fallback)
-      const firstWord = cardName.split(' ')[0];
-      if (firstWord.length > 2 && firstWord !== cardName) {
-        queries.push(firstWord);
+      // Query 3: primera palabra sola (fallback)
+      if (words[0] && words[0].length > 2 && words[0] !== cardName) {
+        queries.push(words[0]);
       }
-
-      console.log('Queries de búsqueda (en orden):', queries);
 
       for (const q of queries) {
         if (!q || q.length < 2) continue;
@@ -162,20 +140,14 @@ const InventoryPage = () => {
           const results = await cardService.searchCards(q);
           if (results && results.data && results.data.length > 0) {
             allResults = [...results.data, ...allResults];
-            
-            // Si encontramos resultados con búsqueda exacta, parar
-            if (q.startsWith('!') || q === cardName) {
-              console.log(`Encontrados ${results.data.length} resultados para: ${q}`);
-              break;
-            }
+            console.log(`Encontrados ${results.data.length} resultados para: ${q}`);
+            break; // Parar al primer éxito
           }
         } catch (err) {
           console.log(`Sin resultados para: ${q}`);
         }
-        
-        if (allResults.length >= 5) break;
       }
-      
+
       const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
       setFoundCards(uniqueResults.slice(0, 5));
     } catch (error) {
@@ -280,17 +252,50 @@ const InventoryPage = () => {
     ctx.putImageData(imageData, 0, 0);
   };
 
-  // Extraer nombre de carta del texto OCR
+  // Extraer nombre de carta del texto OCR usando detección de type-line
   const extractCardName = (ocrText) => {
-    // Busca la primera palabra(s) que parecen un nombre de carta
+    // El nombre de la carta aparece ANTES de la línea de tipo en una carta MTG
+    const typeLineKeywords = [
+      'Legendary Creature', 'Legendary Artifact', 'Legendary Land',
+      'Legendary Enchantment', 'Legendary Planeswalker',
+      'Creature \u2014', 'Creature -', 'Creature —',
+      'Basic Land', 'Snow Land',
+      '\nInstant', '\nSorcery', '\nEnchantment', '\nArtifact', '\nPlaneswalker',
+    ];
+
+    let typeLineIdx = -1;
+    for (const kw of typeLineKeywords) {
+      const idx = ocrText.indexOf(kw);
+      if (idx > 3) { typeLineIdx = idx; break; }
+    }
+
+    const rawArea = typeLineIdx > 3
+      ? ocrText.substring(0, typeLineIdx)
+      : ocrText.substring(0, 300);
+
+    // Limpiar el área: solo alfanumérico, comas, apóstrofos, espacios, guiones
+    const cleanedArea = rawArea
+      .replace(/[^a-zA-Z0-9,'\s\-\u2013\u2014]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Patrón: palabras en Title Case con conectores opcionales ("of", "the", "of the")
+    const nameRegex = /\b([A-Z][a-z]{1,}(?:,? (?:of |the |of the |in |to |at |a )?[A-Z][a-z]{1,})*)\b/g;
+    const matches = [...cleanedArea.matchAll(nameRegex)]
+      .map(m => m[1].trim())
+      .filter(m => m.length > 3 && !/^(This|That|When|Each|Put|You|Choose|Your|Their|The|An|If|Cost|Pay)$/.test(m));
+
+    if (matches.length > 0) {
+      // Preferir el match con más palabras (nombre de carta más largo)
+      return matches.sort((a, b) => b.split(/\s+/).length - a.split(/\s+/).length)[0];
+    }
+
+    // Fallback: primera línea con contenido alfabético
     const lines = ocrText.split('\n').filter(l => l.trim().length > 2);
-    if (lines.length === 0) return ocrText;
-
-    // Primera línea que no sea solo números/símbolos
-    const nameCandidate = lines
-      .find(line => /[a-zA-Z]/.test(line) && line.length > 2);
-
-    return nameCandidate ? nameCandidate.trim() : lines[0].trim();
+    const nameLine = lines.find(line => /[a-zA-Z]{3,}/.test(line));
+    return nameLine
+      ? nameLine.replace(/[^a-zA-Z0-9\s,'\-\u2013]/g, '').trim().substring(0, 60)
+      : ocrText.substring(0, 60);
   };
 
   // Procesar imagen con OCR mejorado
@@ -326,43 +331,30 @@ const InventoryPage = () => {
       setScanning(false);
     }
   };
-  const handleFileUpload = async (event) => {
+  const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    try {
-      setScanning(true);
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageDataUrl = e.target.result;
-        setPreviewUrl(imageDataUrl);
-        
-        // Crear canvas para pre-procesar imagen
-        const img = new Image();
-        img.onload = async () => {
-          const processCanvas = document.createElement('canvas');
-          processCanvas.width = img.width;
-          processCanvas.height = img.height;
-          const ctx = processCanvas.getContext('2d');
-          
-          // Dibujar imagen original
-          ctx.drawImage(img, 0, 0);
-          
-          // Pre-procesar para mejorar OCR
-          preprocessImageForOCR(processCanvas);
-          
-          // Procesar con OCR mejorado
-          const processedImageUrl = processCanvas.toDataURL('image/jpeg', 0.95);
-          await performOCR(processedImageUrl);
-        };
-        img.src = imageDataUrl;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageDataUrl = e.target.result;
+      setPreviewUrl(imageDataUrl);
+
+      // Pre-procesar imagen y guardar para cuando el usuario confirme
+      const img = new Image();
+      img.onload = () => {
+        const processCanvas = document.createElement('canvas');
+        processCanvas.width = img.width;
+        processCanvas.height = img.height;
+        const ctx = processCanvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        preprocessImageForOCR(processCanvas);
+        const processedImageUrl = processCanvas.toDataURL('image/jpeg', 0.95);
+        setPendingImageUrl(processedImageUrl);
       };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error procesando archivo:', error);
-      alert('Error al leer el archivo: ' + error.message);
-      setScanning(false);
-    }
+      img.src = imageDataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   // Detener cámara
@@ -442,6 +434,7 @@ const InventoryPage = () => {
     setSelectedCard(null);
     setQuantity(1);
     setPreviewUrl(null);
+    setPendingImageUrl(null);
     setCameraError(false);
     setCameraErrorMessage('');
   }, [stopCamera]);
@@ -716,24 +709,22 @@ const InventoryPage = () => {
                     <div className="d-flex gap-2">
                       <Button 
                         className="btn-mtg-secondary flex-grow-1"
-                        onClick={() => setPreviewUrl(null)}
+                        onClick={() => { setPreviewUrl(null); setPendingImageUrl(null); }}
                       >
-                        Capturar otra imagen
+                        Subir otra imagen
                       </Button>
                       <Button
                         className="btn-mtg-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
-                        onClick={captureAndScan}
-                        disabled={scanning}
+                        onClick={() => performOCR(pendingImageUrl || previewUrl)}
+                        disabled={scanning || (!pendingImageUrl && !previewUrl)}
                       >
                         {scanning ? (
                           <>
                             <Spinner size="sm" />
-                            <span>Procesando...</span>
+                            <span>Analizando...</span>
                           </>
                         ) : (
-                          <>
-                            <span>🔍 Escanear</span>
-                          </>
+                          <span>🔍 Confirmar y Escanear</span>
                         )}
                       </Button>
                     </div>

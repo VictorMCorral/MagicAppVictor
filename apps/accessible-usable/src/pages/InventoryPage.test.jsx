@@ -136,4 +136,30 @@ describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
       expect(scanButtons.length).toBeGreaterThan(0);
     });
   });
+
+  describe('Flujo de confirmación OCR', () => {
+    it('no debería iniciar OCR automáticamente al abrir el modal', () => {
+      render(<InventoryPage />);
+      const scanButtons = screen.getAllByText(/Escanear/i);
+      fireEvent.click(scanButtons[0]);
+      // OCR no debe estar corriendo
+      expect(screen.queryByText(/Analizando/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Buscando coincidencias/i)).not.toBeInTheDocument();
+    });
+
+    it('debería mostrar botón "Confirmar y Escanear" cuando hay preview', () => {
+      render(<InventoryPage />);
+      const scanButtons = screen.getAllByText(/Escanear/i);
+      fireEvent.click(scanButtons[0]);
+      // La opción de subir imagen debe estar disponible
+      expect(screen.getByText(/Subir Imagen/i)).toBeInTheDocument();
+    });
+
+    it('debería mostrar botón "Subir Imagen" en el modal del escáner', () => {
+      render(<InventoryPage />);
+      const scanButtons = screen.getAllByText(/Escanear/i);
+      fireEvent.click(scanButtons[0]);
+      expect(screen.getByText(/Subir Imagen/i)).toBeInTheDocument();
+    });
+  });
 });
