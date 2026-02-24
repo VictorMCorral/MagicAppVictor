@@ -121,6 +121,8 @@ npm install
 echo "🔄 Ejecutando Prisma..."
 npx prisma generate
 npx prisma migrate deploy
+echo "🌱 Ejecutando seed de datos demo (admin/admin)..."
+node scripts/seed-demo-data.js || echo "⚠️  Seed omitido (puede que ya existan los datos)."
 
 # Iniciar o reiniciar con PM2
 pm2 stop mtg-backend 2>/dev/null || true
