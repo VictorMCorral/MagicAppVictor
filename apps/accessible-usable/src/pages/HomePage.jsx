@@ -23,10 +23,11 @@ const HomePage = () => {
               }}
             >
               <img 
-                src="/logo.jpg" 
+                src={`${process.env.PUBLIC_URL}/logo.jpg`}
                 alt="MTG Nexus" 
                 className="w-100 h-100"
                 style={{objectFit: 'cover'}}
+                onError={(e) => { e.target.onerror = null; e.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`; }}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, Upload, Plus, Trash2 } from 'lucide-react';
 import deckService from '../services/deckService';
@@ -15,11 +15,7 @@ const DeckViewPage = () => {
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
 
-  useEffect(() => {
-    loadDeck();
-  }, [id]);
-
-  const loadDeck = async () => {
+  const loadDeck = useCallback(async () => {
     try {
       const response = await deckService.getDeckById(id);
       setDeck(response.data);
@@ -29,7 +25,11 @@ const DeckViewPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    loadDeck();
+  }, [loadDeck]);
 
   const handleAddCard = async () => {
     if (!cardSearch.trim()) return;
@@ -219,7 +219,7 @@ const DeckViewPage = () => {
               </button>
             </div>
           ) : (
-            <div className="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
+            <div className="row row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
               {deck.cards.map((card) => (
                 <div key={card.id} className="col">
                   <div className="deck-card-item h-100 position-relative">

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Modal, Form, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Modal, Spinner } from 'react-bootstrap';
 import { Camera, TrendingUp, Plus, Trash2, X, Save } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import cardService from '../services/cardService';
@@ -95,6 +95,9 @@ const InventoryPage = () => {
   useEffect(() => {
     localStorage.setItem('mtg_inventory', JSON.stringify(inventory));
   }, [inventory]);
+
+  // Estado para ver detalle de carta del inventario
+  const [viewCard, setViewCard] = useState(null);
 
   // Estados para resultados de búsqueda
   const [foundCards, setFoundCards] = useState([]);
@@ -523,7 +526,7 @@ const InventoryPage = () => {
 
         {/* Inventory Grid */}
         {inventory.length > 0 && (
-          <Row xs={2} sm={3} md={4} lg={5} xl={6} className="g-4">
+          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4">
             {inventory.map((item) => {
               const imageUris = parseImageUris(item.image_uris, item.imageUrl);
               const price = parseFloat(item.prices?.eur || item.prices?.usd || 0);
@@ -531,7 +534,15 @@ const InventoryPage = () => {
               
               return (
                 <Col key={item.uniqueId}>
-                  <Card className="inventory-card-item h-100 position-relative">
+                  <Card 
+                    className="inventory-card-item h-100 position-relative"
+                    onClick={() => setViewCard(item)}
+                    style={{ cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Ver detalle de ${item.name}`}
+                    onKeyDown={(e) => e.key === 'Enter' && setViewCard(item)}
+                  >
                     {/* Cantidad Badge */}
                     <Badge 
                       bg="warning" 
@@ -602,7 +613,7 @@ const InventoryPage = () => {
                           variant="danger"
                           size="sm"
                           className="p-1 opacity-75"
-                          onClick={() => setInventory(inventory.filter(i => i.uniqueId !== item.uniqueId))}
+                          onClick={(e) => { e.stopPropagation(); setInventory(inventory.filter(i => i.uniqueId !== item.uniqueId)); }}
                           title="Eliminar carta"
                         >
                           <Trash2 size={14} />
@@ -637,6 +648,134 @@ const InventoryPage = () => {
             </Card.Body>
           </Card>
         )}
+
+        {/* Modal Detalle de Carta del Inventario */}
+        <Modal
+          show={!!viewCard}
+          onHide={() => setViewCard(null)}
+          size="lg"
+          centered
+          contentClassName="card-mtg-premium"
+        >
+          {viewCard && (
+            <>
+              <Modal.Header className="border-0">
+                <Modal.Title className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
+                  {viewCard.name}
+                </Modal.Title>
+                <Button
+                  variant="link"
+                  className="p-0 text-decoration-none"
+                  onClick={() => setViewCard(null)}
+                  style={{ color: 'var(--mtg-text-light)' }}
+                  aria-label="Cerrar detalle"
+                >
+                  <X size={24} />
+                </Button>
+              </Modal.Header>
+              <Modal.Body>
+                <Row>
+                  <Col md={5} className="mb-4 mb-md-0 d-flex justify-content-center">
+                    {(() => {
+                      const uris = parseImageUris(viewCard.image_uris, viewCard.imageUrl);
+                      const src = uris?.normal || uris?.small || getScryfallImageUrl(viewCard.name);
+                      return src ? (
+                        <img
+                          src={src}
+                          alt={viewCard.name}
+                          className="img-fluid rounded shadow-lg"
+                          style={{ maxHeight: '450px', border: '1px solid rgba(212, 175, 55, 0.3)' }}
+                        />
+                      ) : (
+                        <div
+                          className="d-flex align-items-center justify-content-center rounded border border-warning w-100"
+                          style={{ height: '300px', background: 'rgba(0,0,0,0.3)' }}
+                        >
+                          <span className="text-light">Imagen no disponible</span>
+                        </div>
+                      );
+                    })()}
+                  </Col>
+                  <Col md={7}>
+                    {viewCard.type_line && (
+                      <div className="mb-3">
+                        <h5 className="mb-1" style={{ color: 'var(--mtg-text-light)' }}>{viewCard.type_line}</h5>
+                        {viewCard.mana_cost && (
+                          <p className="fs-5 mb-0" style={{ color: 'var(--mtg-gold-dark)', fontFamily: 'serif' }}>
+                            {viewCard.mana_cost}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {viewCard.oracle_text && (
+                      <div
+                        className="p-3 rounded mb-3"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          borderLeft: '4px solid var(--mtg-gold-bright)',
+                          color: 'var(--mtg-text-light)'
+                        }}
+                      >
+                        <p className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>{viewCard.oracle_text}</p>
+                      </div>
+                    )}
+
+                    <Row className="g-3 mb-4">
+                      <Col xs={6}>
+                        <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Set</small>
+                          <span style={{ color: 'var(--mtg-text-light)' }}>{viewCard.set_name || 'Desconocido'}</span>
+                        </div>
+                      </Col>
+                      <Col xs={6}>
+                        <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Cantidad</small>
+                          <span className="fw-bold fs-5" style={{ color: 'var(--mtg-gold-bright)' }}>{viewCard.quantity}x</span>
+                        </div>
+                      </Col>
+                      {viewCard.rarity && (
+                        <Col xs={6}>
+                          <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Rareza</small>
+                            <span className="text-capitalize" style={{ color: 'var(--mtg-gold-bright)' }}>{viewCard.rarity}</span>
+                          </div>
+                        </Col>
+                      )}
+                      {(viewCard.prices?.eur || viewCard.prices?.usd) && (
+                        <Col xs={6}>
+                          <div className="p-2 rounded" style={{ background: 'rgba(74, 222, 128, 0.1)' }}>
+                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#4ade80' }}>Precio Unit.</small>
+                            <span className="fw-bold fs-5" style={{ color: '#4ade80' }}>
+                              €{parseFloat(viewCard.prices?.eur || viewCard.prices?.usd || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </Col>
+                      )}
+                      {viewCard.power && viewCard.toughness && (
+                        <Col xs={6}>
+                          <div className="p-2 rounded" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#f87171' }}>P/T</small>
+                            <span className="fw-bold fs-5" style={{ color: '#f87171' }}>
+                              {viewCard.power}/{viewCard.toughness}
+                            </span>
+                          </div>
+                        </Col>
+                      )}
+                    </Row>
+
+                    <Button
+                      className="btn-mtg-secondary w-100"
+                      onClick={() => setViewCard(null)}
+                    >
+                      Cerrar Detalle
+                    </Button>
+                  </Col>
+                </Row>
+              </Modal.Body>
+            </>
+          )}
+        </Modal>
 
         {/* Scanner Modal */}
         <Modal 

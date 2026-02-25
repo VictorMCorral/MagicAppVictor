@@ -1,0 +1,5 @@
+MTG Nexus nació como un laboratorio de ideas para jugadores que disfrutan experimentar con la experiencia digital tanto como con el juego físico. Nuestro objetivo es unir accesibilidad, usabilidad y narrativa visual para que cualquier persona pueda explorar, construir y compartir sus mazos con la misma emoción que siente al barajar cartas reales.
+
+Trabajamos con un enfoque iterativo: prototipamos rápido, medimos con usuarios reales y traducimos hallazgos en mejoras concretas. Esta plataforma es el resultado de sesiones de co-creación con jugadores veteranos, diseñadores inclusivos y especialistas en visión artificial. Creemos en la transparencia, por eso documentamos cada estudio y lo ponemos a tu alcance en la sección de Estudios Visuales.
+
+Siéntete libre de usar MTG Nexus como tu base de operaciones creativa. Queremos que la herramienta sea tan flexible como tus estrategias y que sirva de referente para proyectos que busquen equilibrar tecnología, estilo y empatía.

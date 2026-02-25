@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Button, Spinner, Modal } from 'react-bootstrap';
 import { Search } from 'lucide-react';
 import cardService from '../services/cardService';
-import CardDisplay from '../components/CardDisplay';
 
 const CardSearchPage = () => {
   const [query, setQuery] = useState('');
@@ -70,7 +69,7 @@ const CardSearchPage = () => {
           <p className="mb-4 fs-5 fw-semibold" style={{ color: 'var(--mtg-text-light)' }}>
             ✨ {cards.length} {cards.length === 1 ? 'carta encontrada' : 'cartas encontradas'}
           </p>
-          <Row xs={2} sm={3} md={4} lg={5} xl={6} className="g-4">
+          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4">
             {cards.map((card) => {
               const imageUrl = card.image_uris?.normal || card.imageUrl;
               const price = card.prices?.eur || card.priceEur;

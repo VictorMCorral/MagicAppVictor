@@ -91,13 +91,8 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await login(email, password);
-      const token = response.data.token; // Changed .data.data.token to .data.token - authService handles the actual API response data
-      // Actually checking authService code again, authService returns `response.data`.
-      // The API response format usually is { success: true, data: { token: ..., user: ... } }
-      // So authService.login returns { success: true, data: { ... } }
-      // So `response.data` in `login` (AuthContext) is the token object.
-      // Wait, let's verify AuthContext again.
+      await login(email, password);
+      // authService/login ya persiste token y usuario en localStorage via AuthContext
       
       let targetPort = '3000';
       if (selectedAccessibility === 'not-accessible') targetPort = '3001';

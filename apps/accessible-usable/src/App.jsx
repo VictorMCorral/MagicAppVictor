@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 
 // Páginas
 import HomePage from './pages/HomePage';
@@ -12,6 +12,8 @@ import DeckViewPage from './pages/DeckViewPage';
 import CardSearchPage from './pages/CardSearchPage';
 import InventoryPage from './pages/InventoryPage';
 import SitemapPage from './pages/SitemapPage';
+import AboutPage from './pages/AboutPage';
+import VisualStudiesPage from './pages/VisualStudiesPage';
 
 // Componentes
 import PrivateRoute from './components/PrivateRoute';
@@ -20,7 +22,6 @@ import Navbar from './components/Navbar';
 // Componente inicial para manejar la redirección de tokens
 const AppContent = () => {
   const location = useLocation();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -57,6 +58,8 @@ const AppContent = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/cards" element={<CardSearchPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/visual-studies" element={<VisualStudiesPage />} />
 
         {/* Rutas protegidas */}
         <Route
