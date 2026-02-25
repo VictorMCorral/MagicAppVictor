@@ -52,6 +52,54 @@ body {
   line-height: 1.6;
 }
 
+body.flow-no-accesible {
+  --mtg-gold-bright: #8a8a8a;
+  --mtg-gold-dark: #707070;
+  --mtg-text-light: #7a7a7a;
+  --mtg-text-muted: #6c6c6c;
+  --mtg-bg-dark: #161616;
+  --mtg-bg-darker: #101010;
+  min-width: 1200px;
+  width: 1200px;
+  overflow-x: auto;
+}
+
+body.flow-no-accesible .form-label-mtg,
+body.flow-no-accesible label {
+  display: none !important;
+}
+
+body.flow-no-accesible *:focus,
+body.flow-no-accesible *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+body.flow-no-accesible .navbar-mtg svg,
+body.flow-no-accesible .btn svg {
+  display: none !important;
+}
+
+body.flow-no-usable {
+  min-width: 1200px;
+  width: 1200px;
+  overflow-x: auto;
+}
+
+body.flow-no-usable .ux-helper-text {
+  display: none !important;
+}
+
+body.flow-no-usable h1,
+body.flow-no-usable h2,
+body.flow-no-usable h3,
+body.flow-no-usable h4,
+body.flow-no-usable h5,
+body.flow-no-usable h6 {
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
 /* Improve text readability */
 p {
   line-height: 1.6;
@@ -116,7 +164,7 @@ small, .small {
   font-weight: 500;
 }
 
-/* Improved Tailwind gray contrast for dark theme */
+/* Improved gray contrast for dark theme */
 .text-gray-600 {
   color: #a8a8b8 !important;
   line-height: 1.5;
@@ -283,6 +331,8 @@ small, .small {
   background: linear-gradient(180deg, rgba(14, 14, 27, 0.98) 0%, rgba(5, 8, 16, 0.95) 100%) !important;
   border-bottom: 1px solid rgba(255, 215, 0, 0.3);
   backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1100;
 }
 
 .nav-link-mtg {
@@ -301,6 +351,128 @@ small, .small {
 .nav-link-mtg.active {
   color: var(--mtg-gold-bright) !important;
   background: rgba(255, 215, 0, 0.15);
+}
+
+.navbar-mtg .dropdown-menu {
+  background-color: rgba(5, 8, 16, 0.98);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  z-index: 1200;
+}
+
+.navbar-mtg .dropdown-item {
+  color: var(--mtg-text-light);
+}
+
+.navbar-mtg .dropdown-item:hover,
+.navbar-mtg .dropdown-item:focus {
+  color: var(--mtg-gold-bright);
+  background-color: rgba(255, 215, 0, 0.12);
+}
+
+.mobile-nav-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: 0.45rem;
+}
+
+.mobile-nav-group {
+  border: 1px solid rgba(255, 215, 0, 0.22);
+  border-radius: 0.85rem;
+  background: linear-gradient(160deg, rgba(255, 215, 0, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  overflow: hidden;
+}
+
+.mobile-nav-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--mtg-gold-bright);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 0.75rem 0.95rem;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.18);
+}
+
+.mobile-nav-submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem;
+}
+
+.mobile-nav-subitem {
+  display: flex !important;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--mtg-text-light) !important;
+  border-radius: 0.55rem;
+  margin-left: 0.35rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.mobile-nav-subitem:hover,
+.mobile-nav-subitem:focus {
+  color: var(--mtg-gold-bright) !important;
+  background: rgba(255, 215, 0, 0.13);
+}
+
+.mobile-nav-subicon {
+  color: rgba(255, 215, 0, 0.75);
+}
+
+@media (max-width: 991.98px) {
+  .navbar-mtg .navbar-collapse {
+    margin-top: 0.75rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+  }
+
+  .navbar-auth-zone {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    padding-top: 0.55rem;
+    border-left: 0 !important;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding-left: 0 !important;
+  }
+
+  .navbar-mtg .btn-mtg-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.breadcrumbs-wrapper {
+  background: rgba(5, 8, 16, 0.92);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.breadcrumbs-mtg {
+  --bs-breadcrumb-divider-color: rgba(255, 215, 0, 0.55);
+  --bs-breadcrumb-item-active-color: var(--mtg-gold-bright);
+  font-size: 0.9rem;
+}
+
+.breadcrumbs-mtg .breadcrumb-item,
+.breadcrumbs-mtg .breadcrumb-item > span {
+  color: var(--mtg-text-muted);
+}
+
+.breadcrumbs-mtg .breadcrumb-item a {
+  color: var(--mtg-text-light);
+  text-decoration: none;
+}
+
+.breadcrumbs-mtg .breadcrumb-item a:hover {
+  color: var(--mtg-gold-bright);
+  text-decoration: underline;
+}
+
+.flash-message-container {
+  z-index: 1300;
 }
 
 /* ============================================
@@ -347,6 +519,19 @@ small, .small {
 
 .aspect-card {
   aspect-ratio: 63 / 88;
+}
+
+.deck-grid-card .deck-card-media {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.deck-grid-card .deck-card-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ============================================
@@ -396,6 +581,21 @@ small, .small {
   border-radius: 0.5rem;
   aspect-ratio: 63 / 88;
   background: linear-gradient(145deg, #1a1a2e 0%, #0a0a15 100%);
+}
+
+.inventory-card-item .inventory-card-media {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: linear-gradient(145deg, #1a1a2e 0%, #0a0a15 100%);
+}
+
+.inventory-card-item .inventory-card-media-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 .inventory-card-item .card-image-container img {

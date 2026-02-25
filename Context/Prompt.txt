@@ -1,4 +1,0 @@
-Actúa como un Senior Fullstack Developer. Analiza el siguiente JSON que contiene los requisitos, 
-stack tecnológico e historias de usuario para una aplicación de Magic: The Gathering. Basándote 
-en esto, genera la estructura inicial del proyecto, el esquema de la base de datos y el primer 
-módulo de integración con Scryfall.

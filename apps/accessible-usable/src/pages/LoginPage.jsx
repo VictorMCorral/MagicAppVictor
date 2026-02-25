@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LogIn, Sparkles } from 'lucide-react';
 import { Container, Row, Col, Card, Form, Button, Alert, ButtonGroup } from 'react-bootstrap';
+import { FLOW_SUFFIXES, applyFlowSuffix, getFlowSuffixFromPath, resolveFlowPath } from '../utils/versionRouting';
 
 const FIELD_LABELS = {
   email: 'Email',
@@ -15,17 +16,17 @@ const KNOWN_LOGIN_MESSAGES = {
 
 const ACCESSIBILITY_OPTIONS = [
   {
-    id: 'accessible',
+    id: FLOW_SUFFIXES.accessible,
     label: 'Accesible y Usable',
     helper: 'La experiencia se siente clara y usable para todos los jugadores.'
   },
   {
-    id: 'not-accessible',
+    id: FLOW_SUFFIXES['no-accesible'],
     label: 'No Accesible',
     helper: 'La presentación no cumple con criterios básicos de acceso para personas con discapacidad.'
   },
   {
-    id: 'not-usable',
+    id: FLOW_SUFFIXES['no-usable'],
     label: 'No Usable',
     helper: 'El flujo actual no permite completar las tareas básicas de acceso al sistema.'
   }
@@ -36,12 +37,13 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [feedbackMessages, setFeedbackMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedAccessibility, setSelectedAccessibility] = useState(
-    ACCESSIBILITY_OPTIONS[0].id
-  );
+  const location = useLocation();
+  const currentFlowSuffix = getFlowSuffixFromPath(location.pathname);
+  const [selectedAccessibility, setSelectedAccessibility] = useState(currentFlowSuffix);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
 
   const getDetailedLoginFeedback = (err) => {
     const responseData = err.response?.data;
@@ -92,28 +94,8 @@ const LoginPage = () => {
 
     try {
       await login(email, password);
-      // authService/login ya persiste token y usuario en localStorage via AuthContext
-      
-      let targetPort = '3000';
-      if (selectedAccessibility === 'not-accessible') targetPort = '3001';
-      if (selectedAccessibility === 'not-usable') targetPort = '3002';
-
-      if (window.location.port === targetPort) {
-        navigate('/dashboard');
-      } else {
-        // Redirigir con token en URL para mantener sesión
-        // Obtenemos los datos directos del localStorage que acaba de ser actualizado por authService
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-        
-        if (storedToken && storedUser) {
-           const userStr = encodeURIComponent(storedUser);
-           window.location.href = `http://localhost:${targetPort}/dashboard?token=${storedToken}&user=${userStr}`;
-        } else {
-           // Fallback si algo falló con localStorage
-           window.location.href = `http://localhost:${targetPort}/dashboard`;
-        }
-      }
+      const homePath = applyFlowSuffix('/home', selectedAccessibility);
+      navigate(homePath);
     } catch (err) {
       setFeedbackMessages(getDetailedLoginFeedback(err));
     } finally {
@@ -140,7 +122,7 @@ const LoginPage = () => {
                   <h2 className="text-mtg-gold fw-bold mb-2">Iniciar Sesión</h2>
                   <p className="text-mtg-muted mb-0">
                     ¿No tienes cuenta?{' '}
-                    <Link to="/register" className="text-mtg-gold text-decoration-none fw-semibold">
+                    <Link to={toFlowPath('/register')} className="text-mtg-gold text-decoration-none fw-semibold">
                       Regístrate aquí
                     </Link>
                   </p>
@@ -160,7 +142,7 @@ const LoginPage = () => {
 
                 {/* Accessibility Options */}
                 <div className="mb-4">
-                  <p className="small fw-semibold text-mtg-light mb-3">Estado de accesibilidad</p>
+                  <p className="small fw-semibold text-mtg-light mb-3">Estado de Accesibilidad</p>
                   <ButtonGroup className="d-flex flex-wrap gap-2 mb-2">
                     {ACCESSIBILITY_OPTIONS.map((option) => {
                       const isSelected = selectedAccessibility === option.id;

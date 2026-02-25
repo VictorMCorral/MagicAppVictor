@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { applyFlowSuffix, getFlowSuffixFromPath } from '../utils/versionRouting';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -32,7 +33,9 @@ api.interceptors.response.use(
       // Token expirado o inválido
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname || '/home';
+      const loginPath = applyFlowSuffix('/login', getFlowSuffixFromPath(currentPath));
+      window.location.href = loginPath;
     }
     return Promise.reject(error);
   }

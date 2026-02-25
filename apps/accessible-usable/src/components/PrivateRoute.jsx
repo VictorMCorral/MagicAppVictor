@@ -1,10 +1,12 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { applyFlowSuffix, getFlowSuffixFromPath } from '../utils/versionRouting';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -17,7 +19,8 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const loginPath = applyFlowSuffix('/login', getFlowSuffixFromPath(location.pathname));
+  return isAuthenticated ? children : <Navigate to={loginPath} replace />;
 };
 
 export default PrivateRoute;

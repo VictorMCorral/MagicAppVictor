@@ -1,0 +1,22 @@
+{
+  "implemented": {
+    "title": "Ya implantadas",
+    "features": [
+      "Buscador Scryfall",
+      "Creador de mazos",
+      "Autenticación básica",
+      "Importación/Exportación .txt",
+      "Escaneo por cámara (OCR)",
+      "Gestión de colección personal",
+      "Sincronización de precios Cardmarket (via Scryfall)"
+    ]
+  },
+  "upcoming": {
+    "title": "Próximamente (v3.0 - Playroom)",
+    "features": [
+      "Tablero virtual manual",
+      "Salas multijugador via WebSockets",
+      "Contador de vida y estados"
+    ]
+  }
+}

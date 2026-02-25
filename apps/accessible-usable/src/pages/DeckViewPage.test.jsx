@@ -3,6 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import DeckViewPage from './DeckViewPage';
 import deckService from '../services/deckService';
+import cardService from '../services/cardService';
 import { act } from 'react';
 
 // Mock dependencies
@@ -37,6 +38,19 @@ describe('DeckViewPage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    cardService.getCardByName.mockResolvedValue({
+      success: true,
+      data: {
+        name: 'Sol Ring',
+        type: 'Artifact',
+        manaCost: '{1}',
+        oracleText: '{T}: Add {C}{C}.',
+        setName: 'Commander Masters',
+        rarity: 'uncommon',
+        imageUrl: 'http://example.com/solring.jpg',
+        priceEur: 2.5
+      }
+    });
   });
 
   it('renders loading state initially', async () => {
@@ -111,6 +125,7 @@ describe('DeckViewPage', () => {
 
     expect(screen.getByText('Importar Lista de Mazo')).toBeInTheDocument();
     expect(screen.getByText('Procesar Importación')).toBeInTheDocument();
+    expect(screen.getByText(/Formato recomendado/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/4 Lightning Bolt/i)).toBeInTheDocument();
   });
 
@@ -138,5 +153,26 @@ describe('DeckViewPage', () => {
     await waitFor(() =>
       expect(screen.getByText('Importando...')).toBeInTheDocument()
     );
+  });
+
+  it('abre detalle de carta al pulsar sobre una carta del mazo', async () => {
+    deckService.getDeckById.mockResolvedValue({ data: mockDeck });
+
+    await act(async () => {
+      render(
+        <BrowserRouter>
+          <DeckViewPage />
+        </BrowserRouter>
+      );
+    });
+
+    await waitFor(() => expect(screen.getByText('Test Deck')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: /Ver detalle de Sol Ring/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('{T}: Add {C}{C}.')).toBeInTheDocument();
+      expect(screen.getByText('Cerrar Detalle')).toBeInTheDocument();
+    });
   });
 });

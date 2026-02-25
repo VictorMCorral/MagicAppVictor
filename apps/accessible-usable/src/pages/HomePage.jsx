@@ -1,11 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Search, Upload, Download, Camera, TrendingUp, Sparkles } from 'lucide-react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { BookOpen, Search, Upload, Download, Camera, TrendingUp, Sparkles, Clock3 } from 'lucide-react';
+import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import { resolveFlowPath } from '../utils/versionRouting';
+import roadmap from '../config/roadmap.json';
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
 
   return (
     <div className="page-container bg-mtg-gradient">
@@ -40,22 +44,22 @@ const HomePage = () => {
           <div className="d-flex justify-content-center gap-3 flex-wrap">
             {isAuthenticated ? (
               <>
-                <Button as={Link} to="/dashboard" className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
+                <Button as={Link} to={toFlowPath('/dashboard')} className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
                   <BookOpen size={20} />
                   Mis Mazos
                 </Button>
-                <Button as={Link} to="/inventory" className="btn-mtg-secondary px-4 py-2 d-flex align-items-center gap-2">
+                <Button as={Link} to={toFlowPath('/inventory')} className="btn-mtg-secondary px-4 py-2 d-flex align-items-center gap-2">
                   <TrendingUp size={20} />
                   Mi Inventario
                 </Button>
               </>
             ) : (
               <>
-                <Button as={Link} to="/register" className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
+                <Button as={Link} to={toFlowPath('/register')} className="btn-mtg-primary px-4 py-2 d-flex align-items-center gap-2">
                   <Sparkles size={20} />
                   Comenzar Gratis
                 </Button>
-                <Button as={Link} to="/login" className="btn-mtg-secondary px-4 py-2">
+                <Button as={Link} to={toFlowPath('/login')} className="btn-mtg-secondary px-4 py-2">
                   Iniciar Sesión
                 </Button>
               </>
@@ -63,70 +67,45 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Features v1.0 */}
+        {/* Features Ya implantadas */}
         <Row className="justify-content-center mt-5">
           <Col lg={8}>
-            <h2 className="text-mtg-gold fw-bold text-center mb-4">✨ Características v1.0 - MVP Core</h2>
+            <h2 className="text-mtg-gold fw-bold text-center mb-4">✨ {roadmap.implemented.title}</h2>
             <div className="d-flex flex-column gap-3">
-              <div className="d-flex align-items-start gap-3">
-                <Search size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-light fw-bold mb-1">Buscador Scryfall</h5>
-                  <p className="text-mtg-secondary mb-0">Busca entre miles de cartas con la potente API de Scryfall</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-start gap-3">
-                <BookOpen size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-light fw-bold mb-1">Creador de Mazos</h5>
-                  <p className="text-mtg-secondary mb-0">Crea y gestiona tus mazos con estadísticas en tiempo real</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-start gap-3">
-                <Upload size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-light fw-bold mb-1">Importar Mazos</h5>
-                  <p className="text-mtg-secondary mb-0">Importa listas de mazos desde archivos .txt fácilmente</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-start gap-3">
-                <Download size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-light fw-bold mb-1">Exportar Mazos</h5>
-                  <p className="text-mtg-secondary mb-0">Exporta tus mazos en formato estándar para compartir</p>
-                </div>
-              </div>
+              {roadmap.implemented.features.map((feature, index) => {
+                const icons = [Search, BookOpen, Upload, Download, Camera, TrendingUp, TrendingUp];
+                const FeatureIcon = icons[index] || Sparkles;
+                return (
+                  <div className="d-flex align-items-start gap-3" key={feature}>
+                    <FeatureIcon size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                    <div>
+                      <h5 className="text-mtg-light fw-bold mb-0">{feature}</h5>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </Col>
         </Row>
 
-        {/* Features v2.0 */}
+        {/* Features v3.0 */}
         <Row className="justify-content-center mt-5">
           <Col lg={8}>
-            <h2 className="text-mtg-gold fw-bold text-center mb-4">🚀 Próximas Características v2.0</h2>
-            <div className="d-flex flex-column gap-3">
-              <div className="d-flex align-items-start gap-3">
-                <Camera size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Escaneo OCR</h5>
-                  <p className="text-mtg-light mb-0">Identifica cartas automáticamente usando la cámara con IA</p>
+            <Card className="card-mtg">
+              <Card.Body>
+                <h2 className="text-mtg-gold fw-bold text-center mb-4">⏳ {roadmap.upcoming.title}</h2>
+                <div className="d-flex flex-column gap-3">
+                  {roadmap.upcoming.features.map((feature) => (
+                    <div className="d-flex align-items-start gap-3" key={feature}>
+                      <Clock3 size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
+                      <div>
+                        <h5 className="text-mtg-light fw-bold mb-0">{feature}</h5>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              <div className="d-flex align-items-start gap-3">
-                <TrendingUp size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Gestión de Colecciones</h5>
-                  <p className="text-mtg-light mb-0">Organiza tu colección y obtén el valor total estimado</p>
-                </div>
-              </div>
-              <div className="d-flex align-items-start gap-3">
-                <TrendingUp size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
-                <div>
-                  <h5 className="text-mtg-gold fw-bold mb-1">Sincronización Precios</h5>
-                  <p className="text-mtg-light mb-0">Precios en tiempo real de Cardmarket integrados</p>
-                </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
 

@@ -1,8 +1,28 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import InventoryPage from './InventoryPage';
+import InventoryPage, { mergeCardIntoInventory } from './InventoryPage';
+
+jest.mock('../services/cardService', () => ({
+  getCardByName: jest.fn().mockResolvedValue({
+    success: true,
+    data: {
+      name: 'Lightning Bolt',
+      type: 'Instant',
+      manaCost: '{R}',
+      oracleText: 'Lightning Bolt deals 3 damage to any target.',
+      setName: 'Magic 2010',
+      rarity: 'common',
+      imageUrl: 'http://example.com/lightning-bolt.jpg',
+      priceEur: 2.2
+    }
+  })
+}));
 
 describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   describe('Renderizado básico', () => {
     it('debería renderizar sin errores', () => {
       render(<InventoryPage />);
@@ -137,6 +157,28 @@ describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
     });
   });
 
+  describe('Detalle de carta de inventario', () => {
+    it('abre el modal de detalle al pulsar una carta del inventario', async () => {
+      localStorage.setItem('mtg_inventory', JSON.stringify([
+        {
+          uniqueId: 1001,
+          name: 'Lightning Bolt',
+          quantity: 2,
+          set_name: 'Magic 2010',
+          prices: { eur: '2.20' },
+          image_uris: { small: 'http://example.com/lightning-bolt-small.jpg' }
+        }
+      ]));
+
+      render(<InventoryPage />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Ver detalle de Lightning Bolt/i }));
+
+      expect(await screen.findByRole('button', { name: /Cerrar Detalle/i })).toBeInTheDocument();
+      expect(screen.getAllByText(/Lightning Bolt/i).length).toBeGreaterThan(0);
+    });
+  });
+
   describe('Flujo de confirmación OCR', () => {
     it('no debería iniciar OCR automáticamente al abrir el modal', () => {
       render(<InventoryPage />);
@@ -160,6 +202,56 @@ describe('InventoryPage - v2.0 Inventory & Scan (Bootstrap)', () => {
       const scanButtons = screen.getAllByText(/Escanear/i);
       fireEvent.click(scanButtons[0]);
       expect(screen.getByText(/Subir Imagen/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Merge de cartas duplicadas', () => {
+    it('debería sumar cantidad si se agrega la misma carta de nuevo', () => {
+      const currentInventory = [
+        {
+          uniqueId: 1001,
+          id: 'abc-123',
+          name: 'Lightning Bolt',
+          quantity: 1,
+          set_name: 'Magic 2010'
+        }
+      ];
+
+      const selectedCard = {
+        id: 'abc-123',
+        name: 'Lightning Bolt',
+        set_name: 'Magic 2010'
+      };
+
+      const result = mergeCardIntoInventory(currentInventory, selectedCard, 1);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].quantity).toBe(2);
+      expect(result[0].uniqueId).toBe(1001);
+    });
+
+    it('debería crear nueva entrada cuando la carta es distinta', () => {
+      const currentInventory = [
+        {
+          uniqueId: 1001,
+          id: 'abc-123',
+          name: 'Lightning Bolt',
+          quantity: 1,
+          set_name: 'Magic 2010'
+        }
+      ];
+
+      const selectedCard = {
+        id: 'xyz-999',
+        name: 'Counterspell',
+        set_name: 'Dominaria United Commander'
+      };
+
+      const result = mergeCardIntoInventory(currentInventory, selectedCard, 1);
+
+      expect(result).toHaveLength(2);
+      expect(result[1].name).toBe('Counterspell');
+      expect(result[1].quantity).toBe(1);
     });
   });
 });

@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Alert, Badge, Button, Card, Col, Container, Form, Modal, Row, Spinner } from 'react-bootstrap';
 import { Download, Upload, Plus, Trash2 } from 'lucide-react';
 import deckService from '../services/deckService';
 import cardService from '../services/cardService';
+import { resolveFlowPath } from '../utils/versionRouting';
+import CardDetailsModal from '../components/CardDetailsModal';
+import { isNoUsableFlow } from '../utils/flowMode';
+import ConfirmActionModal from '../components/ConfirmActionModal';
+import FlashMessage from '../components/FlashMessage';
 
 const DeckViewPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const noUsableMode = isNoUsableFlow(location.pathname);
+
   const [deck, setDeck] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddCard, setShowAddCard] = useState(false);
@@ -14,18 +23,29 @@ const DeckViewPage = () => {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [selectedCard, setSelectedCard] = useState(null);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [cardToRemoveId, setCardToRemoveId] = useState(null);
+  const [flash, setFlash] = useState({ show: false, message: '', variant: 'success' });
+
+  const toFlowPath = useCallback(
+    (path) => resolveFlowPath(path, location.pathname),
+    [location.pathname]
+  );
 
   const loadDeck = useCallback(async () => {
     try {
       const response = await deckService.getDeckById(id);
       setDeck(response.data);
+      setActionError('');
     } catch (error) {
       console.error('Error al cargar mazo:', error);
-      navigate('/dashboard');
+      navigate(toFlowPath('/dashboard'));
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, toFlowPath]);
 
   useEffect(() => {
     loadDeck();
@@ -40,22 +60,34 @@ const DeckViewPage = () => {
         await deckService.addCardToDeck(id, cardResponse.data.scryfallId, 1);
         setCardSearch('');
         setShowAddCard(false);
-        loadDeck();
+        await loadDeck();
+        setFlash({ show: true, message: 'Carta añadida al mazo.', variant: 'success' });
       }
     } catch (error) {
       console.error('Error al añadir carta:', error);
-      alert('No se pudo añadir la carta');
+      setActionError('No se pudo añadir la carta. Comprueba el nombre e inténtalo nuevamente.');
+      setFlash({ show: true, message: 'No se pudo añadir la carta.', variant: 'danger' });
     }
   };
 
-  const handleRemoveCard = async (cardId) => {
-    if (window.confirm('¿Eliminar esta carta del mazo?')) {
-      try {
-        await deckService.removeCardFromDeck(id, cardId);
-        loadDeck();
-      } catch (error) {
-        console.error('Error al eliminar carta:', error);
-      }
+  const handleRemoveCard = (cardId) => {
+    setCardToRemoveId(cardId);
+    setShowRemoveConfirm(true);
+  };
+
+  const confirmRemoveCard = async () => {
+    if (!cardToRemoveId) return;
+    try {
+      await deckService.removeCardFromDeck(id, cardToRemoveId);
+      await loadDeck();
+      setFlash({ show: true, message: 'Carta eliminada del mazo.', variant: 'warning' });
+    } catch (error) {
+      console.error('Error al eliminar carta:', error);
+      setActionError('No se pudo eliminar la carta seleccionada.');
+      setFlash({ show: true, message: 'No se pudo eliminar la carta.', variant: 'danger' });
+    } finally {
+      setCardToRemoveId(null);
+      setShowRemoveConfirm(false);
     }
   };
 
@@ -63,28 +95,95 @@ const DeckViewPage = () => {
     try {
       const blob = await deckService.exportDeck(id);
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${deck.name}.txt`;
-      a.click();
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `${deck.name}.txt`;
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      setFlash({ show: true, message: 'Exportación completada.', variant: 'info' });
     } catch (error) {
       console.error('Error al exportar:', error);
+      setActionError('No se pudo exportar el mazo.');
+      setFlash({ show: true, message: 'No se pudo exportar el mazo.', variant: 'danger' });
     }
   };
 
   const handleImport = async () => {
     try {
       setImporting(true);
-      await deckService.importDeck(id, importText, false);
+
+      if (noUsableMode) {
+        const proprietaryFormatPattern = /^MTG\|[A-Za-z0-9\s'\-,]+\|\d+$/;
+        const lines = importText
+          .split('\n')
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        const invalidLine = lines.find((line) => !proprietaryFormatPattern.test(line));
+        if (invalidLine) {
+          throw new Error('FORMATO_PROPIETARIO_INVALIDO');
+        }
+
+        const normalizedImport = lines
+          .map((line) => {
+            const [, cardName, quantity] = line.split('|');
+            return `${quantity} ${cardName}`;
+          })
+          .join('\n');
+
+        await deckService.importDeck(id, normalizedImport, false);
+      } else {
+        await deckService.importDeck(id, importText, false);
+      }
+
       setImportText('');
       setShowImport(false);
-      loadDeck();
-      alert('Mazo importado exitosamente');
+      await loadDeck();
+      setFlash({ show: true, message: 'Mazo importado correctamente.', variant: 'success' });
     } catch (error) {
       console.error('Error al importar:', error);
-      alert('Error al importar mazo');
+      if (error?.message === 'FORMATO_PROPIETARIO_INVALIDO') {
+        setActionError('En este flujo solo se admite formato propietario: MTG|Nombre Carta|Cantidad');
+        setFlash({ show: true, message: 'Formato inválido para este flujo.', variant: 'danger' });
+      } else {
+        setActionError('Error al importar el mazo. Revisa el formato del texto.');
+        setFlash({ show: true, message: 'No se pudo importar el mazo.', variant: 'danger' });
+      }
     } finally {
       setImporting(false);
+    }
+  };
+
+  const displayedCards = noUsableMode
+    ? (deck?.cards || []).flatMap((card) =>
+        Array.from({ length: Math.max(card.quantity || 1, 1) }, (_, index) => ({
+          ...card,
+          quantity: 1,
+          originalId: card.id,
+          id: `${card.id}-split-${index}`
+        }))
+      )
+    : (deck?.cards || []);
+
+  const handleOpenCardDetails = async (card) => {
+    try {
+      const cardDetailResponse = await cardService.getCardByName(card.name);
+      if (cardDetailResponse?.success && cardDetailResponse?.data) {
+        const detailedCard = cardDetailResponse.data;
+        setSelectedCard({
+          ...card,
+          ...detailedCard,
+          manaCost: detailedCard.manaCost,
+          oracleText: detailedCard.oracleText,
+          setName: detailedCard.setName,
+          priceEur: detailedCard.priceEur
+        });
+        return;
+      }
+      setSelectedCard(card);
+    } catch (error) {
+      console.error('Error al cargar detalle de carta:', error);
+      setSelectedCard(card);
     }
   };
 
@@ -92,286 +191,236 @@ const DeckViewPage = () => {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center bg-mtg-darker">
         <div className="text-center">
-          <div className="spinner-border text-warning mb-3" role="status"></div>
-          <p className="text-xl text-mtg-gold font-semibold animate-pulse">Invocando mazo...</p>
+          <Spinner animation="border" variant="warning" className="mb-3" />
+          <p className="fs-5 text-mtg-gold fw-semibold mb-0">Invocando mazo...</p>
         </div>
       </div>
     );
   }
 
-  if (!deck) return (
-    <div className="min-vh-100 flex items-center justify-center text-white">Mazo no encontrado</div>
-  );
+  if (!deck) {
+    return (
+      <Container className="py-5">
+        <Alert variant="warning" className="mb-0">Mazo no encontrado.</Alert>
+      </Container>
+    );
+  }
 
   return (
-    <div className="deck-view-container py-5 px-3 md:px-5">
-      <div className="container mx-auto max-w-7xl">
-        
-        {/* Header Superior & Acciones */}
-        <div className="deck-header-card relative overflow-hidden group">
-          {/* Fondo decorativo sutil */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500 opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-          
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  {deck.format || 'Casual'}
-                </span>
-                <span className="text-gray-400 text-xs flex items-center gap-1">
-                  📅 {new Date(deck.updatedAt || Date.now()).toLocaleDateString()}
-                </span>
+    <div className="deck-view-container py-4">
+      <Container>
+        <FlashMessage
+          show={flash.show}
+          message={flash.message}
+          variant={flash.variant}
+          onClose={() => setFlash((previous) => ({ ...previous, show: false }))}
+        />
+
+        {actionError && (
+          <Alert variant="danger" onClose={() => setActionError('')} dismissible>
+            {actionError}
+          </Alert>
+        )}
+
+        <Card className="deck-header-card mb-4">
+          <Card.Body>
+            <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
+              <div>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <Badge bg="warning" text="dark">{deck.format || 'Casual'}</Badge>
+                  <small className="text-mtg-muted">{new Date(deck.updatedAt || Date.now()).toLocaleDateString()}</small>
+                </div>
+                <h1 className="text-mtg-gold mb-1">{deck.name}</h1>
+                {deck.description && <p className="text-mtg-light mb-0">{deck.description}</p>}
               </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-2 tracking-tight drop-shadow-lg">
-                {deck.name}
-              </h1>
-              {deck.description && (
-                <p className="text-gray-300 max-w-2xl text-lg leading-relaxed">{deck.description}</p>
-              )}
+
+              <div className="d-flex flex-wrap gap-2 align-self-start">
+                <Button variant="secondary" className="btn-mtg-secondary" onClick={handleExport} title="Descargar lista">
+                  <Download size={16} className="me-2" />
+                  Exportar
+                </Button>
+                <Button variant="secondary" className="btn-mtg-secondary" onClick={() => setShowImport(true)} title="Subir lista">
+                  <Upload size={16} className="me-2" />
+                  Importar
+                </Button>
+                <Button variant="primary" className="btn-mtg-primary" onClick={() => setShowAddCard(true)}>
+                  <Plus size={16} className="me-2" />
+                  Añadir Carta
+                </Button>
+              </div>
             </div>
 
-            <div className="deck-actions-bar">
-              <button 
-                onClick={handleExport}
-                className="btn-mtg-secondary flex items-center gap-2 shadow-lg hover:shadow-yellow-500/20"
-                title="Descargar lista"
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">Exportar</span>
-              </button>
-              
-              <button 
-                onClick={() => setShowImport(true)}
-                className="btn-mtg-secondary flex items-center gap-2 shadow-lg hover:shadow-blue-500/20"
-                title="Subir lista"
-              >
-                <Upload size={18} />
-                <span className="hidden sm:inline">Importar</span>
-              </button>
-              
-              <button 
-                onClick={() => setShowAddCard(true)}
-                className="btn-mtg-primary flex items-center gap-2 shadow-xl hover:shadow-yellow-500/30 transform hover:-translate-y-1 transition-all"
-              >
-                <Plus size={20} />
-                <span className="font-bold">Añadir Carta</span>
-              </button>
-            </div>
-          </div>
+            {deck.stats && (
+              <Row className="mt-4 g-3">
+                <Col xs={6} md={3}>
+                  <Card className="card-mtg text-center h-100"><Card.Body><div className="h4 text-mtg-gold mb-0">{deck.stats.totalCards}</div><small className="text-mtg-muted">Cartas</small></Card.Body></Card>
+                </Col>
+                <Col xs={6} md={3}>
+                  <Card className="card-mtg text-center h-100"><Card.Body><div className="h4 text-success mb-0">{deck.stats.uniqueCards}</div><small className="text-mtg-muted">Únicas</small></Card.Body></Card>
+                </Col>
+                <Col xs={6} md={3}>
+                  <Card className="card-mtg text-center h-100"><Card.Body><div className="h4 text-info mb-0">{deck.stats.avgCmc}</div><small className="text-mtg-muted">CMC Medio</small></Card.Body></Card>
+                </Col>
+                <Col xs={6} md={3}>
+                  <Card className="card-mtg text-center h-100"><Card.Body><div className="h4 text-warning mb-0">€{deck.stats.totalValueEur}</div><small className="text-mtg-muted">Valor Est.</small></Card.Body></Card>
+                </Col>
+              </Row>
+            )}
+          </Card.Body>
+        </Card>
 
-          {/* Grid de Estadísticas */}
-          {deck.stats && (
-            <div className="deck-stats-grid mt-8 pt-6 border-t border-white/10">
-              <div className="deck-stat-item">
-                <div className="deck-stat-value yellow">{deck.stats.totalCards}</div>
-                <div className="deck-stat-label">Cartas</div>
-              </div>
-              <div className="deck-stat-item">
-                <div className="deck-stat-value green">{deck.stats.uniqueCards}</div>
-                <div className="deck-stat-label">Únicas</div>
-              </div>
-              <div className="deck-stat-item">
-                <div className="deck-stat-value blue">{deck.stats.avgCmc}</div>
-                <div className="deck-stat-label">CMC Medio</div>
-              </div>
-              <div className="deck-stat-item border-yellow-500/30 bg-yellow-500/5">
-                <div className="deck-stat-value yellow">€{deck.stats.totalValueEur}</div>
-                <div className="deck-stat-label gold">Valor Est.</div>
-              </div>
+        <Card className="deck-cards-section">
+          <Card.Body>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h2 className="h4 text-mtg-light mb-0">Biblioteca</h2>
+              <small className="text-mtg-muted">{displayedCards.length} cartas</small>
+            </div>
+
+            {displayedCards.length === 0 ? (
+              <Alert variant="secondary" className="mb-0 text-center">
+                Tu mazo está vacío. Añade cartas o importa una lista.
+              </Alert>
+            ) : (
+              <Row className="g-3">
+                {displayedCards.map((card) => (
+                  <Col key={card.id} xs={12} sm={6} md={4} lg={3} xl={2}>
+                    <Card
+                      className="h-100 card-mtg deck-grid-card cursor-pointer"
+                      onClick={() => handleOpenCardDetails(card)}
+                      role="button"
+                      aria-label={`Ver detalle de ${card.name}`}
+                    >
+                      <div className="deck-card-media">
+                        <Card.Img
+                          variant="top"
+                          src={card.imageUrl || `${process.env.PUBLIC_URL}/logo.jpg`}
+                          alt={card.name}
+                          className="deck-card-media-img"
+                          onError={(event) => {
+                            event.target.onerror = null;
+                            event.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`;
+                          }}
+                        />
+                      </div>
+                      <Card.Body className="d-flex flex-column">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <small className="text-mtg-muted">x{card.quantity}</small>
+                          <Button
+                            variant="link"
+                            className="text-danger p-0"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleRemoveCard(card.originalId || card.id);
+                            }}
+                            title="Eliminar carta"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                        <h6 className="text-mtg-light mb-1">{card.name}</h6>
+                        <small className="text-mtg-muted mb-2">{card.type}</small>
+                        <small className="text-mtg-gold mt-auto">
+                          {card.priceEur ? `€${(card.priceEur * card.quantity).toFixed(2)}` : '-'}
+                        </small>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </Card.Body>
+        </Card>
+      </Container>
+
+      <Modal show={showAddCard} onHide={() => setShowAddCard(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Añadir Nueva Carta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Control
+            type="text"
+            value={cardSearch}
+            onChange={(event) => setCardSearch(event.target.value)}
+            placeholder="Ej: Black Lotus"
+            onKeyDown={(event) => event.key === 'Enter' && handleAddCard()}
+            autoFocus
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAddCard(false)}>
+            Cancelar
+          </Button>
+          <Button variant="warning" onClick={handleAddCard} disabled={!cardSearch.trim()}>
+            Buscar y Añadir
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showImport} onHide={() => setShowImport(false)} centered size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Importar Lista de Mazo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="position-relative">
+          {importing && (
+            <div
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+              style={{
+                backgroundColor: 'rgba(5, 8, 16, 0.78)',
+                backdropFilter: 'blur(2px)',
+                zIndex: 10
+              }}
+            >
+              <Spinner animation="border" variant="warning" className="mb-3" />
+              <p className="mb-0 fw-semibold text-mtg-gold">Importando mazo...</p>
             </div>
           )}
-        </div>
+          <p className="small mb-3 text-mtg-light ux-helper-text">
+            {noUsableMode ? (
+              <>
+                Formato obligatorio en este flujo: <strong>MTG|Nombre Carta|Cantidad</strong>.<br />
+                Ejemplo: <strong>MTG|Lightning Bolt|4</strong>.
+              </>
+            ) : (
+              <>
+                Formato recomendado: una carta por línea con la estructura <strong>cantidad nombre_carta</strong>.
+                Ejemplo: <strong>4 Lightning Bolt</strong>.
+              </>
+            )}
+          </p>
+          <Form.Control
+            as="textarea"
+            rows={12}
+            value={importText}
+            onChange={(event) => setImportText(event.target.value)}
+            placeholder={noUsableMode ? 'MTG|Lightning Bolt|4&#10;MTG|Counterspell|2' : '4 Lightning Bolt&#10;2 Counterspell&#10;1 Black Lotus'}
+            disabled={importing}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowImport(false)} disabled={importing}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleImport} disabled={importing || !importText.trim()}>
+            {importing ? 'Importando...' : 'Procesar Importación'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
-        {/* Sección de Cartas */}
-        <div className="deck-cards-section shadow-2xl">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 pb-4 border-b border-white/10 gap-4">
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                📚 Biblioteca
-              </h2>
-              <span className="text-gray-400 text-sm font-medium">
-                ({deck.cards.length} cartas totales)
-              </span>
-            </div>
-            
-            {/* Filtros o vista (placeholder para futuro) */}
-            <div className="flex gap-2">
-              <div className="px-3 py-1 rounded bg-black/30 border border-white/10 text-xs text-gray-400">
-                Vista: Grid
-              </div>
-            </div>
-          </div>
+      <ConfirmActionModal
+        show={showRemoveConfirm}
+        onCancel={() => {
+          setShowRemoveConfirm(false);
+          setCardToRemoveId(null);
+        }}
+        onConfirm={confirmRemoveCard}
+        title="Eliminar carta"
+        message="¿Eliminar esta carta del mazo?"
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        confirmVariant="danger"
+      />
 
-          {deck.cards.length === 0 ? (
-            <div className="text-center py-20 bg-black/20 rounded-xl border border-dashed border-white/10">
-              <div className="mb-4 text-gray-600">
-                <Plus className="w-16 h-16 mx-auto opacity-20" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-300 mb-2">Tu mazo está vacío</h3>
-              <p className="text-gray-500 max-w-md mx-auto mb-6">
-                Comienza añadiendo cartas individualmente o importa una lista completa.
-              </p>
-              <button 
-                onClick={() => setShowAddCard(true)}
-                className="btn-mtg-outline hover:bg-yellow-500 hover:text-black transition-colors"
-              >
-                Comenzar a construir
-              </button>
-            </div>
-          ) : (
-            <div className="row row-cols-1 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 g-4">
-              {deck.cards.map((card) => (
-                <div key={card.id} className="col">
-                  <div className="deck-card-item h-100 position-relative">
-                    
-                    {/* Badge de Cantidad - Estilo mejorado */}
-                    <div className="position-absolute top-0 end-0 translate-middle z-3">
-                      <span className="d-flex align-items-center justify-content-center w-8 h-8 bg-warning text-black fw-bold small rounded-circle shadow border border-dark">
-                        {card.quantity}
-                      </span>
-                    </div>
-
-                    {/* Imagen de carta con efecto hover */}
-                    <div className="deck-card-image-wrapper">
-                    {card.imageUrl ? (
-                      <img
-                        src={card.imageUrl}
-                        alt={card.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center p-4">
-                        <span className="text-gray-600 text-xs text-center font-mono">Sin imagen disponible</span>
-                      </div>
-                    )}
-                    {/* Overlay gradiente para legibilidad si es necesario */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
-                  </div>
-
-                  {/* Información de la carta */}
-                  <div className="deck-card-info">
-                    <h3 className="deck-card-name" title={card.name}>{card.name}</h3>
-                    <p className="deck-card-type" title={card.type}>{card.type}</p>
-                    
-                    <div className="mt-auto pt-3 flex items-center justify-between border-t border-white/5">
-                      <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">Precio</span>
-                        <span className="deck-card-price">
-                          {card.priceEur ? `€${(card.priceEur * card.quantity).toFixed(2)}` : '-'}
-                        </span>
-                      </div>
-                      
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRemoveCard(card.id); }}
-                        className="p-2 rounded-full text-red-500 hover:text-red-300 hover:bg-red-500/20 transition-colors"
-                        title="Eliminar carta"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        </div>
-      </div>
-
-      {/* Modal Añadir Carta - Reestilizado */}
-      {showAddCard && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#12121a] border border-yellow-500/30 rounded-2xl w-full max-w-lg shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-600 via-yellow-400 to-yellow-600"></div>
-            
-            <div className="p-8">
-              <h2 className="text-2xl font-bold text-white mb-2">Añadir Nueva Carta</h2>
-              <p className="text-gray-400 text-sm mb-6">Busca por el nombre exacto de la carta (en inglés) para añadirla a tu mazo.</p>
-              
-              <div className="relative mb-6">
-                <input
-                  type="text"
-                  value={cardSearch}
-                  onChange={(e) => setCardSearch(e.target.value)}
-                  placeholder="Ej: Black Lotus"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-all text-lg"
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddCard()}
-                  autoFocus
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500">
-                  <Plus size={20} />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button 
-                  onClick={() => setShowAddCard(false)} 
-                  className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition font-medium"
-                >
-                  Cancelar
-                </button>
-                <button 
-                  onClick={handleAddCard} 
-                  disabled={!cardSearch.trim()}
-                  className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-bold hover:from-yellow-500 hover:to-yellow-400 shadow-lg shadow-yellow-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Buscar y Añadir
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Importar - Reestilizado */}
-      {showImport && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#12121a] border border-blue-500/30 rounded-2xl w-full max-w-2xl shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600"></div>
-            
-            <div className="p-8 pb-0">
-              <h2 className="text-2xl font-bold text-white mb-2">Importar Lista de Mazo</h2>
-              <p className="text-gray-400 text-sm mb-6">
-                Pega tu lista de cartas abajo. Formato aceptado: <code className="bg-white/10 px-1 rounded text-yellow-500">Cantidad Nombre</code>
-              </p>
-            </div>
-            
-            <div className="px-8 flex-1 min-h-0">
-              <textarea
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                placeholder="4 Lightning Bolt&#10;2 Counterspell&#10;1 Black Lotus"
-                className="w-full h-full min-h-[300px] bg-black/40 border border-white/10 rounded-xl p-5 text-gray-300 placeholder-gray-700 font-mono text-sm focus:outline-none focus:border-blue-500/50 resize-none"
-              />
-            </div>
-
-            <div className="p-8 flex gap-3">
-              <button 
-                onClick={() => setShowImport(false)} 
-                className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-300 hover:bg-white/5 transition font-medium"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleImport}
-                disabled={importing || !importText.trim()}
-                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/20 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {importing ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    Importando...
-                  </>
-                ) : 'Procesar Importación'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CardDetailsModal card={selectedCard} show={!!selectedCard} onHide={() => setSelectedCard(null)} />
     </div>
   );
 };

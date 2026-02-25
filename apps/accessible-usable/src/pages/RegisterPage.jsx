@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { UserPlus, Sparkles } from 'lucide-react';
+import { resolveFlowPath } from '../utils/versionRouting';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,9 @@ const RegisterPage = () => {
   
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
 
   const handleChange = (e) => {
     setFormData({
@@ -43,7 +47,7 @@ const RegisterPage = () => {
 
     try {
       await register(formData.email, formData.username, formData.password);
-      navigate('/dashboard');
+      navigate(toFlowPath('/dashboard'));
     } catch (err) {
       setError(err.response?.data?.message || 'Error al registrar usuario');
     } finally {
@@ -79,7 +83,7 @@ const RegisterPage = () => {
                   <p className="mt-2 text-mtg-secondary" style={{lineHeight: '1.6'}}>
                     ¿Ya tienes cuenta?{' '}
                     <Link 
-                      to="/login" 
+                      to={toFlowPath('/login')}
                       className="fw-semibold text-decoration-none"
                       style={{ color: 'var(--mtg-gold-bright)' }}
                     >

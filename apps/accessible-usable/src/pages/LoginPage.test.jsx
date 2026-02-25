@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import LoginPage from './LoginPage';
 
@@ -75,11 +75,60 @@ describe('LoginPage (Bootstrap)', () => {
     );
 
     // Verifica que existe el grupo de accesibilidad
-    expect(screen.getByText(/Accesibilidad/i)).toBeInTheDocument();
+    expect(screen.getByText(/Estado de Accesibilidad/i)).toBeInTheDocument();
     
     // Verifica botones de accesibilidad
     const normalBtn = screen.getByRole('button', { name: /Accesible y Usable/i });
     expect(normalBtn).toBeInTheDocument();
+  });
+
+  it('redirige al home de la versión no usable tras login exitoso', async () => {
+    const loginMock = jest.fn().mockResolvedValue({});
+    useAuth.mockReturnValue({ login: loginMock });
+
+    render(
+      <BrowserRouter>
+        <LoginPage />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /No Usable/i }));
+
+    const emailInput = screen.getByPlaceholderText(/tu@email.com o admin/i);
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
+
+    fireEvent.change(emailInput, { target: { value: 'admin' } });
+    fireEvent.change(passwordInput, { target: { value: 'admin' } });
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }));
+
+    await waitFor(() => {
+      expect(loginMock).toHaveBeenCalledWith('admin', 'admin');
+      expect(mockNavigate).toHaveBeenCalledWith('/home-no-usable');
+    });
+  });
+
+  it('redirige al home de la versión no accesible tras login exitoso', async () => {
+    const loginMock = jest.fn().mockResolvedValue({});
+    useAuth.mockReturnValue({ login: loginMock });
+
+    render(
+      <BrowserRouter>
+        <LoginPage />
+      </BrowserRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /No Accesible/i }));
+
+    const emailInput = screen.getByPlaceholderText(/tu@email.com o admin/i);
+    const passwordInput = screen.getByPlaceholderText(/••••••••/i);
+
+    fireEvent.change(emailInput, { target: { value: 'admin' } });
+    fireEvent.change(passwordInput, { target: { value: 'admin' } });
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }));
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/home-no-accesible');
+    });
   });
 
   it('debería renderizar formulario de login', () => {

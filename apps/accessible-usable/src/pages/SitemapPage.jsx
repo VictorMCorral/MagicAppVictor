@@ -1,292 +1,175 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Home, LogIn, UserPlus, Search, Eye, Layout, Package, 
-  Camera, Upload, CheckCircle, Download
-} from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './SitemapPage.css';
+import { resolveFlowPath } from '../utils/versionRouting';
 
 const SitemapPage = () => {
   const navigate = useNavigate();
-  const [hoveredNode, setHoveredNode] = useState(null);
+  const location = useLocation();
+  const [activeMap, setActiveMap] = useState('hierarchical');
+  const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
 
-  // ViewBox dimensions para escalar todo proporcionalmente
-  const VIEWBOX_WIDTH = 1400;
-  const VIEWBOX_HEIGHT = 1100;
-  const NODE_OFFSET_Y = 100;
-
-  // Coordenadas exactas del archivo mapa-web.excalidraw
-  const nodes = [
-    // Nivel 0 - Home
-    { id: 'home', name: 'Home', x: 721, y: -70, width: 132, height: 100, color: '#6366f1', path: '/', icon: Home },
-    
-    // Nivel 1 - Login
-    { id: 'login', name: 'Login', x: 718, y: 101, width: 132, height: 100, color: '#8b5cf6', path: '/login', icon: LogIn },
-    { id: 'registrarse', name: 'Registrarse', x: 983, y: 105, width: 163, height: 100, color: '#ec4899', path: '/register', icon: UserPlus },
-    
-    // Nivel 2 - Secciones principales
-    { id: 'buscar', name: 'Buscar Cartas', x: 460, y: 300, width: 132, height: 100, color: '#06b6d4', path: '/cards', icon: Search },
-    { id: 'mazos', name: 'Mazos', x: 720, y: 300, width: 132, height: 100, color: '#10b981', path: '/dashboard', icon: Layout },
-    { id: 'inventario', name: 'Inventario', x: 1020, y: 300, width: 132, height: 100, color: '#f97316', path: '/inventory', icon: Package },
-    
-    // Nivel 3 - Subsecciones
-    { id: 'visor-carta', name: 'Visor de Carta', x: 300, y: 500, width: 132, height: 100, color: '#06b6d4', path: '/cards', icon: Eye },
-    { id: 'mazo-detalle', name: 'Mazo detalle', x: 720, y: 500, width: 132, height: 100, color: '#10b981', path: '/dashboard', icon: Eye },
-    { id: 'escanear', name: 'Escanear Carta', x: 1020, y: 500, width: 132, height: 100, color: '#f97316', path: '/inventory', icon: Camera },
-    
-    // Nivel 4 - Acciones
-    { id: 'exportar', name: 'Exportar', x: 640, y: 700, width: 132, height: 100, color: '#10b981', path: '/dashboard', icon: Upload },
-    { id: 'importar', name: 'Importar', x: 800, y: 700, width: 132, height: 100, color: '#10b981', path: '/dashboard', icon: Download },
-    { id: 'camara', name: 'Camara', x: 960, y: 700, width: 132, height: 100, color: '#f97316', path: '/inventory', icon: Camera },
-    { id: 'subir-imagen', name: 'Subir imagen', x: 1120, y: 700, width: 132, height: 100, color: '#f97316', path: '/inventory', icon: Upload },
-    
-    // Nivel 5 - Final
-    { id: 'seleccionar', name: 'Seleccionar carta', x: 1040, y: 860, width: 132, height: 100, color: '#f97316', path: '/inventory', icon: CheckCircle },
+  const sitemapTree = [
+    {
+      title: 'Inicio',
+      path: '/home',
+      children: [
+        {
+          title: 'Autenticación',
+          children: [
+            { title: 'Iniciar sesión', path: '/login' },
+            { title: 'Registrarse', path: '/register' }
+          ]
+        },
+        {
+          title: 'Info proyecto',
+          children: [
+            { title: 'Sobre mí', path: '/about' },
+            { title: 'Estudios visuales', path: '/visual-studies' },
+            { title: 'Mapa web', path: '/sitemap' }
+          ]
+        },
+        {
+          title: 'Herramientas',
+          children: [
+            {
+              title: 'Buscar cartas',
+              path: '/cards',
+              children: [
+                { title: 'Resultados de búsqueda', path: '/cards' },
+                { title: 'Detalle de carta', path: '/cards' }
+              ]
+            },
+            {
+              title: 'Mazos',
+              path: '/dashboard',
+              children: [
+                { title: 'Dashboard de mazos', path: '/dashboard' },
+                { title: 'Detalle del mazo', path: '/decks/:id' },
+                { title: 'Importar mazo', path: '/decks/:id#import' },
+                { title: 'Exportar mazo', path: '/decks/:id#export' }
+              ]
+            },
+            {
+              title: 'Inventario',
+              path: '/inventory',
+              children: [
+                { title: 'Vista de inventario', path: '/inventory' },
+                { title: 'Escanear carta (cámara)', path: '/inventory#scan' },
+                { title: 'Subir imagen (OCR)', path: '/inventory#upload' },
+                { title: 'Seleccionar carta detectada', path: '/inventory#select' }
+              ]
+            }
+          ]
+        }
+      ]
+    }
   ];
 
-  // Conexiones del Excalidraw (con tipos para determinar dirección)
-  const connections = [
-    { from: 'home', to: 'login' },
-    { from: 'login', to: 'registrarse', type: 'horizontal-right' },
-    { from: 'registrarse', to: 'login', type: 'horizontal-left' },
-    { from: 'home', to: 'buscar' },
-    { from: 'login', to: 'mazos' },
-    { from: 'login', to: 'inventario' },
-    { from: 'login', to: 'buscar' },
-    { from: 'buscar', to: 'visor-carta' },
-    { from: 'mazos', to: 'mazo-detalle' },
-    { from: 'mazo-detalle', to: 'buscar', type: 'return-up' },
-    { from: 'mazo-detalle', to: 'exportar' },
-    { from: 'mazo-detalle', to: 'importar' },
-    { from: 'inventario', to: 'escanear' },
-    { from: 'escanear', to: 'camara' },
-    { from: 'escanear', to: 'subir-imagen' },
-    { from: 'camara', to: 'seleccionar' },
-    { from: 'subir-imagen', to: 'seleccionar' },
-    { from: 'seleccionar', to: 'escanear', type: 'return-curve' },
-  ];
-
-  const getNodeById = (id) => nodes.find(n => n.id === id);
-
-  const handleNavigate = (path) => {
-    if (path) navigate(path);
+  const flattenNodes = (items, acc = []) => {
+    items.forEach((item) => {
+      acc.push({ title: item.title, path: item.path });
+      if (item.children?.length) {
+        flattenNodes(item.children, acc);
+      }
+    });
+    return acc;
   };
 
-  // Calcular punto de conexión según la dirección
-  const getConnectionPoint = (node, side) => {
-    const y = node.y + NODE_OFFSET_Y;
-    switch (side) {
-      case 'top':
-        return { x: node.x + node.width / 2, y: y };
-      case 'bottom':
-        return { x: node.x + node.width / 2, y: y + node.height };
-      case 'left':
-        return { x: node.x, y: y + node.height / 2 };
-      case 'right':
-        return { x: node.x + node.width, y: y + node.height / 2 };
-      default:
-        return { x: node.x + node.width / 2, y: y + node.height };
+  const uniqueByTitle = new Map();
+  flattenNodes(sitemapTree).forEach((item) => {
+    if (!item.title) return;
+    const key = item.title.toLowerCase();
+    if (!uniqueByTitle.has(key)) {
+      uniqueByTitle.set(key, item);
     }
+  });
+
+  const alphabeticalMap = Array.from(uniqueByTitle.values()).sort((first, second) =>
+    first.title.localeCompare(second.title, 'es')
+  );
+
+  const navigateToPath = (path) => {
+    if (!path) return;
+    if (path.includes(':') || path.includes('#')) return;
+    navigate(toFlowPath(path));
   };
 
-  // Determinar qué lado usar según la posición relativa
-  const getConnectionSides = (from, to, connType) => {
-    if (connType === 'horizontal-right') return { fromSide: 'right', toSide: 'left' };
-    if (connType === 'horizontal-left') return { fromSide: 'left', toSide: 'right' };
-    if (connType === 'return-up') return { fromSide: 'top', toSide: 'bottom' };
-    
-    const dx = to.x - from.x;
-    const dy = to.y - from.y;
-    
-    if (Math.abs(dy) < 50) {
-      return dx > 0 
-        ? { fromSide: 'right', toSide: 'left' }
-        : { fromSide: 'left', toSide: 'right' };
-    }
-    
-    if (dy > 0) {
-      return { fromSide: 'bottom', toSide: 'top' };
-    }
-    
-    return { fromSide: 'top', toSide: 'bottom' };
-  };
+  const renderTree = (items) => (
+    <ol className="sitemap-tree-list">
+      {items.map((item) => (
+        <li key={`${item.title}-${item.path || 'group'}`}>
+          {item.path ? (
+            <button className="sitemap-link" onClick={() => navigateToPath(item.path)}>
+              {item.title}
+            </button>
+          ) : (
+            <span className="sitemap-text">{item.title}</span>
+          )}
 
-  // Renderizar conexión SVG
-  const renderConnection = (conn, index) => {
-    const fromNode = getNodeById(conn.from);
-    const toNode = getNodeById(conn.to);
-    
-    if (!fromNode || !toNode) return null;
-
-    const sides = getConnectionSides(fromNode, toNode, conn.type);
-    const start = getConnectionPoint(fromNode, sides.fromSide);
-    const end = getConnectionPoint(toNode, sides.toSide);
-
-    let pathD;
-    
-    if (conn.from === 'seleccionar' && conn.to === 'escanear') {
-      const rightStart = getConnectionPoint(fromNode, 'right');
-      const rightEnd = getConnectionPoint(toNode, 'right');
-      const curveOffset = 140;
-      pathD = `M ${rightStart.x} ${rightStart.y} C ${rightStart.x + curveOffset} ${rightStart.y}, ${rightEnd.x + curveOffset} ${rightEnd.y}, ${rightEnd.x} ${rightEnd.y}`;
-    }
-    else if (conn.from === 'mazo-detalle' && conn.to === 'buscar') {
-      const leftStart = getConnectionPoint(fromNode, 'left');
-      const rightEnd = getConnectionPoint(toNode, 'right');
-      const curveOffset = 80;
-      pathD = `M ${leftStart.x} ${leftStart.y} C ${leftStart.x - curveOffset} ${leftStart.y - 50}, ${rightEnd.x + curveOffset} ${rightEnd.y + 50}, ${rightEnd.x} ${rightEnd.y}`;
-    }
-    else if (sides.fromSide === 'right' && sides.toSide === 'left') {
-      const midX = (start.x + end.x) / 2;
-      pathD = `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`;
-    }
-    else if (sides.fromSide === 'left' && sides.toSide === 'right') {
-      const midX = (start.x + end.x) / 2;
-      pathD = `M ${start.x} ${start.y} C ${midX} ${start.y}, ${midX} ${end.y}, ${end.x} ${end.y}`;
-    }
-    else {
-      const midY = (start.y + end.y) / 2;
-      pathD = `M ${start.x} ${start.y} C ${start.x} ${midY}, ${end.x} ${midY}, ${end.x} ${end.y}`;
-    }
-
-    return (
-      <path
-        key={`${conn.from}-${conn.to}-${index}`}
-        d={pathD}
-        stroke="#374151"
-        strokeWidth="2"
-        fill="none"
-        strokeOpacity="0.7"
-        markerEnd="url(#arrowhead)"
-      />
-    );
-  };
-
-  // Renderizar nodo SVG
-  const renderNode = (node) => {
-    const isHovered = hoveredNode === node.id;
-    const y = node.y + NODE_OFFSET_Y;
-    
-    return (
-      <g 
-        key={node.id}
-        onClick={() => handleNavigate(node.path)}
-        onMouseEnter={() => setHoveredNode(node.id)}
-        onMouseLeave={() => setHoveredNode(null)}
-        style={{ cursor: 'pointer' }}
-      >
-        {/* Sombra */}
-        <rect
-          x={node.x + 4}
-          y={y + 4}
-          width={node.width}
-          height={node.height}
-          rx="16"
-          fill="rgba(0,0,0,0.15)"
-        />
-        {/* Nodo principal */}
-        <rect
-          x={node.x}
-          y={y}
-          width={node.width}
-          height={node.height}
-          rx="16"
-          fill={node.color}
-          stroke="rgba(255,255,255,0.3)"
-          strokeWidth="3"
-          style={{
-            filter: isHovered ? 'brightness(1.1)' : 'none',
-            transition: 'all 0.2s ease'
-          }}
-        />
-        {/* Icono (círculo simplificado) */}
-        <circle
-          cx={node.x + node.width / 2}
-          cy={y + 35}
-          r="14"
-          fill="rgba(255,255,255,0.2)"
-        />
-        {/* Texto */}
-        <text
-          x={node.x + node.width / 2}
-          y={y + node.height / 2 + 18}
-          textAnchor="middle"
-          fill="white"
-          fontSize="13"
-          fontWeight="700"
-          style={{ 
-            fontFamily: "'Inter', sans-serif",
-            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-          }}
-        >
-          {node.name.split(' ').map((word, i) => (
-            <tspan key={i} x={node.x + node.width / 2} dy={i === 0 ? 0 : 15}>
-              {word}
-            </tspan>
-          ))}
-        </text>
-      </g>
-    );
-  };
+          {item.children?.length ? renderTree(item.children) : null}
+        </li>
+      ))}
+    </ol>
+  );
 
   return (
-    <div className="sitemap-page">
-      {/* Header */}
-      <div className="sitemap-header">
-        <h1>🗺️ Mapa Web</h1>
-        <p>Explora la estructura de navegación de MagicApp</p>
-      </div>
+    <main className="sitemap-page" aria-labelledby="sitemap-title">
+      <header className="sitemap-header">
+        <p className="sitemap-site-name">MagicApp</p>
+        <h1 id="sitemap-title">Mapa del sitio</h1>
+        <p className="sitemap-description">Estructura completa de navegación de la aplicación.</p>
+      </header>
 
-      {/* Contenedor del diagrama - responsive */}
-      <div className="sitemap-container">
-        <svg
-          viewBox={`200 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-          preserveAspectRatio="xMidYMid meet"
-          className="sitemap-svg"
+      <nav className="sitemap-breadcrumbs" aria-label="Migas de pan">
+        Estás en: <span>MagicApp</span> &gt; <span>Mapa del sitio</span> &gt;{' '}
+        <strong>{activeMap === 'hierarchical' ? 'Mapa jerárquico del sitio web' : 'Mapa alfabético del sitio web'}</strong>
+      </nav>
+
+      <section className="sitemap-panel" aria-label="Selector de vista del mapa web">
+        <button
+          className={`sitemap-view-button ${activeMap === 'alphabetical' ? 'active' : ''}`}
+          onClick={() => setActiveMap('alphabetical')}
+          aria-pressed={activeMap === 'alphabetical'}
         >
-          {/* Definición de flecha */}
-          <defs>
-            <marker
-              id="arrowhead"
-              markerWidth="10"
-              markerHeight="7"
-              refX="9"
-              refY="3.5"
-              orient="auto"
-            >
-              <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
-            </marker>
-          </defs>
-          
-          {/* Conexiones */}
-          {connections.map((conn, i) => renderConnection(conn, i))}
-          
-          {/* Nodos */}
-          {nodes.map(node => renderNode(node))}
-        </svg>
-      </div>
+          Mapa alfabético del sitio web
+        </button>
+        <button
+          className={`sitemap-view-button ${activeMap === 'hierarchical' ? 'active' : ''}`}
+          onClick={() => setActiveMap('hierarchical')}
+          aria-pressed={activeMap === 'hierarchical'}
+        >
+          Mapa jerárquico del sitio web
+        </button>
+      </section>
 
-      {/* Leyenda de colores */}
-      <div className="sitemap-legend">
-        {[
-          { color: '#6366f1', label: 'Inicio' },
-          { color: '#8b5cf6', label: 'Autenticación' },
-          { color: '#06b6d4', label: 'Búsqueda' },
-          { color: '#10b981', label: 'Mazos' },
-          { color: '#f97316', label: 'Inventario' },
-        ].map(item => (
-          <div key={item.label} className="legend-item">
-            <div className="legend-color" style={{ backgroundColor: item.color }} />
-            <span>{item.label}</span>
-          </div>
-        ))}
-      </div>
+      <section className="sitemap-content" aria-live="polite">
+        <h2>{activeMap === 'hierarchical' ? 'Mapa jerárquico del sitio web' : 'Mapa alfabético del sitio web'}</h2>
 
-      {/* Footer */}
-      <div className="sitemap-footer">
-        <p>Haz clic en cualquier nodo para navegar a esa sección</p>
-      </div>
-    </div>
+        {activeMap === 'hierarchical' ? (
+          renderTree(sitemapTree)
+        ) : (
+          <ol className="sitemap-tree-list sitemap-alphabetical-list">
+            {alphabeticalMap.map((item) => (
+              <li key={`alpha-${item.title}`}>
+                {item.path ? (
+                  <button className="sitemap-link" onClick={() => navigateToPath(item.path)}>
+                    {item.title}
+                  </button>
+                ) : (
+                  <span className="sitemap-text">{item.title}</span>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <footer className="sitemap-footer">
+        <p>Número de páginas y vistas representadas: {alphabeticalMap.length}</p>
+        <p>Consejo: usa este mapa para revisar navegación, jerarquía y cobertura funcional.</p>
+      </footer>
+    </main>
   );
 };
 

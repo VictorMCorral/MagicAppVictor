@@ -47,14 +47,14 @@ describe('HomePage - v2.0 Release (Bootstrap)', () => {
     });
   });
 
-  describe('Sección de características v1.0', () => {
-    it('debería mostrar título de características v1.0', () => {
+  describe('Sección de características implantadas', () => {
+    it('debería mostrar título Ya implantadas', () => {
       render(
         <BrowserRouter>
           <HomePage />
         </BrowserRouter>
       );
-      expect(screen.getByText(/Características v1.0/i)).toBeInTheDocument();
+      expect(screen.getByText(/Ya implantadas/i)).toBeInTheDocument();
     });
 
     it('debería mostrar característica Buscador Scryfall', () => {
@@ -81,7 +81,7 @@ describe('HomePage - v2.0 Release (Bootstrap)', () => {
           <HomePage />
         </BrowserRouter>
       );
-      expect(screen.getByText(/Importar Mazos/i)).toBeInTheDocument();
+      expect(screen.getByText(/Importación\/Exportación \.txt/i)).toBeInTheDocument();
     });
   });
 
@@ -162,32 +162,32 @@ describe('HomePage - v2.0 Release (Bootstrap)', () => {
     });
   });
 
-  describe('Sección v2.0', () => {
-    it('debería mostrar título de características v2.0', () => {
+  describe('Sección Próximamente', () => {
+    it('debería mostrar título de próximas características v3.0', () => {
       render(
         <BrowserRouter>
           <HomePage />
         </BrowserRouter>
       );
-      expect(screen.getByText(/Próximas Características v2.0/i)).toBeInTheDocument();
+      expect(screen.getByText(/Próximamente/i)).toBeInTheDocument();
     });
 
-    it('debería mostrar Escaneo OCR', () => {
+    it('debería mostrar Tablero virtual manual como próxima funcionalidad', () => {
       render(
         <BrowserRouter>
           <HomePage />
         </BrowserRouter>
       );
-      expect(screen.getByText(/Escaneo OCR/i)).toBeInTheDocument();
+      expect(screen.getByText(/Tablero virtual manual/i)).toBeInTheDocument();
     });
 
-    it('debería mostrar Gestión de Colecciones', () => {
+    it('debería mostrar Salas multijugador via WebSockets', () => {
       render(
         <BrowserRouter>
           <HomePage />
         </BrowserRouter>
       );
-      expect(screen.getByText(/Gestión de Colecciones/i)).toBeInTheDocument();
+      expect(screen.getByText(/Salas multijugador via WebSockets/i)).toBeInTheDocument();
     });
   });
 

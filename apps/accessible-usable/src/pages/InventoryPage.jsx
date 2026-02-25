@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Badge, Modal, Spinner } from 'react-bootstrap';
-import { Camera, TrendingUp, Plus, Trash2, X, Save } from 'lucide-react';
+import { Camera, TrendingUp, Plus, Trash2, Save, X } from 'lucide-react';
 import Tesseract from 'tesseract.js';
 import cardService from '../services/cardService';
+import CardDetailsModal from '../components/CardDetailsModal';
+import { isNoAccessibleFlow, isNoUsableFlow } from '../utils/flowMode';
+import InfoModal from '../components/InfoModal';
+import FlashMessage from '../components/FlashMessage';
 
 const SAMPLE_INVENTORY = [
   {
@@ -61,7 +65,63 @@ const getScryfallImageUrl = (cardName) => {
   return `https://api.scryfall.com/cards/named?fuzzy=${encodedName}&format=image&version=small`;
 };
 
+const normalizeTextKey = (value) => (value || '').toString().trim().toLowerCase();
+
+export const getInventoryCardKey = (card) => {
+  if (!card) return '';
+
+  const scryfallId = card.id || card.scryfallId || card.scryfall_id || card.cardId;
+  if (scryfallId) {
+    return `id:${normalizeTextKey(scryfallId)}`;
+  }
+
+  const oracleId = card.oracle_id || card.oracleId;
+  if (oracleId) {
+    return `oracle:${normalizeTextKey(oracleId)}`;
+  }
+
+  const name = normalizeTextKey(card.name);
+  const setName = normalizeTextKey(card.set_name || card.setName);
+  return `name:${name}|set:${setName}`;
+};
+
+export const mergeCardIntoInventory = (currentInventory, selectedCard, quantityToAdd) => {
+  const safeInventory = Array.isArray(currentInventory) ? currentInventory : [];
+  const parsedQuantity = Number.parseInt(quantityToAdd, 10);
+  const safeQuantity = Number.isNaN(parsedQuantity) ? 1 : Math.max(1, parsedQuantity);
+
+  const normalizedCard = {
+    ...selectedCard,
+    quantity: safeQuantity,
+    uniqueId: Date.now() + Math.floor(Math.random() * 1000)
+  };
+
+  if (!normalizedCard.imageUrl && normalizedCard.image_uris?.small) {
+    normalizedCard.imageUrl = normalizedCard.image_uris.small;
+  }
+
+  const incomingKey = getInventoryCardKey(normalizedCard);
+  const existingIndex = safeInventory.findIndex((item) => getInventoryCardKey(item) === incomingKey);
+
+  if (existingIndex === -1) {
+    return [...safeInventory, normalizedCard];
+  }
+
+  const existingItem = safeInventory[existingIndex];
+  const mergedItem = {
+    ...existingItem,
+    ...normalizedCard,
+    quantity: (existingItem.quantity || 0) + safeQuantity,
+    uniqueId: existingItem.uniqueId
+  };
+
+  return safeInventory.map((item, index) => (index === existingIndex ? mergedItem : item));
+};
+
 const InventoryPage = () => {
+  const currentPathname = window.location.pathname || '/home';
+  const noAccessibleMode = isNoAccessibleFlow(currentPathname);
+  const noUsableMode = isNoUsableFlow(currentPathname);
   // Inicializar inventario desde localStorage
   const [inventory, setInventory] = useState(() => {
     const saved = localStorage.getItem('mtg_inventory');
@@ -89,12 +149,15 @@ const InventoryPage = () => {
   const [cameraErrorMessage, setCameraErrorMessage] = useState('');
   const [previewUrl, setPreviewUrl] = useState(null);
   const [pendingImageUrl, setPendingImageUrl] = useState(null);
+  const [infoModal, setInfoModal] = useState({ show: false, title: '', message: '' });
+  const [flash, setFlash] = useState({ show: false, message: '', variant: 'success' });
   const fileInputRef = useRef(null);
 
   // Guardar inventario en localStorage cada vez que cambie
   useEffect(() => {
+    if (noUsableMode) return;
     localStorage.setItem('mtg_inventory', JSON.stringify(inventory));
-  }, [inventory]);
+  }, [inventory, noUsableMode]);
 
   // Estado para ver detalle de carta del inventario
   const [viewCard, setViewCard] = useState(null);
@@ -104,6 +167,33 @@ const InventoryPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const [quantity, setQuantity] = useState(1);
+
+  const openInventoryCardDetails = async (item) => {
+    try {
+      const detailResponse = await cardService.getCardByName(item.name);
+      if (detailResponse?.success && detailResponse?.data) {
+        const detailedCard = detailResponse.data;
+        setViewCard({
+          ...item,
+          ...detailedCard,
+          type_line: detailedCard.type || item.type_line,
+          mana_cost: detailedCard.manaCost || item.mana_cost,
+          oracle_text: detailedCard.oracleText || item.oracle_text,
+          set_name: detailedCard.setName || item.set_name,
+          image_uris: item.image_uris || (detailedCard.imageUrl ? { normal: detailedCard.imageUrl, small: detailedCard.imageUrl } : undefined),
+          prices: item.prices || {
+            eur: detailedCard.priceEur,
+            usd: detailedCard.priceUsd
+          }
+        });
+        return;
+      }
+      setViewCard(item);
+    } catch (error) {
+      console.error('No se pudo cargar detalle enriquecido de inventario:', error);
+      setViewCard(item);
+    }
+  };
 
   // Función para buscar cartas basadas en el texto OCR
   const searchCardsFromOCR = async (text) => {
@@ -140,7 +230,8 @@ const InventoryPage = () => {
         if (!q || q.length < 2) continue;
         console.log(`Intentando Query Scryfall: ${q}`);
         try {
-          const results = await cardService.searchCards(q);
+          const searchQuery = noUsableMode ? `!"${q}"` : q;
+          const results = await cardService.searchCards(searchQuery);
           if (results && results.data && results.data.length > 0) {
             allResults = [...results.data, ...allResults];
             console.log(`Encontrados ${results.data.length} resultados para: ${q}`);
@@ -392,7 +483,11 @@ const InventoryPage = () => {
       await performOCR(imageData);
     } catch (error) {
       console.error('Error en OCR:', error);
-      alert('Error al procesar la imagen. Intenta de nuevo.');
+      setInfoModal({
+        show: true,
+        title: 'Error de OCR',
+        message: 'Error al procesar la imagen. Intenta de nuevo.'
+      });
     } finally {
       setScanning(false);
     }
@@ -401,22 +496,14 @@ const InventoryPage = () => {
   // Función para añadir una carta al inventario
   const addCardToInventory = () => {
     if (!selectedCard) return;
-
-    const normalizedCard = {
-      ...selectedCard,
-      quantity: parseInt(quantity),
-      uniqueId: Date.now()
-    };
-
-    if (!normalizedCard.imageUrl && normalizedCard.image_uris?.small) {
-      normalizedCard.imageUrl = normalizedCard.image_uris.small;
-    }
     
     setInventory(prev => {
-      const updated = [...prev, normalizedCard];
+      const updated = mergeCardIntoInventory(prev, selectedCard, quantity);
       console.log('Inventario actualizado:', updated);
       return updated;
     });
+
+    setFlash({ show: true, message: 'Carta añadida al inventario.', variant: 'success' });
     
     closeScanner();
   };
@@ -471,6 +558,13 @@ const InventoryPage = () => {
   return (
     <div className="min-vh-100 py-4" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}>
       <Container>
+        <FlashMessage
+          show={flash.show}
+          message={flash.message}
+          variant={flash.variant}
+          onClose={() => setFlash((previous) => ({ ...previous, show: false }))}
+        />
+
         {/* Header */}
         <Row className="mb-5 align-items-center">
           <Col>
@@ -536,12 +630,12 @@ const InventoryPage = () => {
                 <Col key={item.uniqueId}>
                   <Card 
                     className="inventory-card-item h-100 position-relative"
-                    onClick={() => setViewCard(item)}
+                    onClick={() => openInventoryCardDetails(item)}
                     style={{ cursor: 'pointer' }}
                     role="button"
-                    tabIndex={0}
+                    tabIndex={noAccessibleMode ? -1 : 0}
                     aria-label={`Ver detalle de ${item.name}`}
-                    onKeyDown={(e) => e.key === 'Enter' && setViewCard(item)}
+                    onKeyDown={noAccessibleMode ? undefined : (e) => e.key === 'Enter' && openInventoryCardDetails(item)}
                   >
                     {/* Cantidad Badge */}
                     <Badge 
@@ -554,17 +648,13 @@ const InventoryPage = () => {
                     </Badge>
                     
                     {/* Imagen */}
-                    <div 
-                      className="position-relative overflow-hidden rounded-top"
-                      style={{ aspectRatio: '63/88', background: 'linear-gradient(to bottom, #374151, #1f2937)' }}
-                    >
+                    <div className="inventory-card-media">
                       {imageSource ? (
                         <Card.Img 
                           variant="top"
                           src={imageSource} 
                           alt={item.name} 
-                          className="w-100 h-100"
-                          style={{ objectFit: 'cover', transition: 'transform 0.3s' }}
+                          className="inventory-card-media-img"
                           loading="lazy"
                           onError={(e) => {
                             const scryfallUrl = getScryfallImageUrl(item.name);
@@ -572,13 +662,18 @@ const InventoryPage = () => {
                               e.target.src = scryfallUrl;
                             } else {
                               e.target.onerror = null;
-                              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjMiIGhlaWdodD0iMzExIiB2aWV3Qm94PSIwIDAgMjIzIDMxMSI+PHJlY3QgZmlsbD0iIzFhMWExYSIgd2lkdGg9IjIyMyIgaGVpZ2h0PSIzMTEiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iI2Q0YWYzNyIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiPk1URzwvdGV4dD48L3N2Zz4=';
+                              e.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`;
                             }
                           }}
                         />
                       ) : (
                         <div className="w-100 h-100 d-flex align-items-center justify-content-center">
-                          <span className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>MTG</span>
+                          <Card.Img
+                            variant="top"
+                            src={`${process.env.PUBLIC_URL}/logo.jpg`}
+                            alt="Logo MTG Nexus"
+                            className="inventory-card-media-img"
+                          />
                         </div>
                       )}
                     </div>
@@ -613,7 +708,11 @@ const InventoryPage = () => {
                           variant="danger"
                           size="sm"
                           className="p-1 opacity-75"
-                          onClick={(e) => { e.stopPropagation(); setInventory(inventory.filter(i => i.uniqueId !== item.uniqueId)); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setInventory(inventory.filter(i => i.uniqueId !== item.uniqueId));
+                            setFlash({ show: true, message: 'Carta eliminada del inventario.', variant: 'warning' });
+                          }}
                           title="Eliminar carta"
                         >
                           <Trash2 size={14} />
@@ -649,133 +748,14 @@ const InventoryPage = () => {
           </Card>
         )}
 
-        {/* Modal Detalle de Carta del Inventario */}
-        <Modal
-          show={!!viewCard}
-          onHide={() => setViewCard(null)}
-          size="lg"
-          centered
-          contentClassName="card-mtg-premium"
-        >
-          {viewCard && (
-            <>
-              <Modal.Header className="border-0">
-                <Modal.Title className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
-                  {viewCard.name}
-                </Modal.Title>
-                <Button
-                  variant="link"
-                  className="p-0 text-decoration-none"
-                  onClick={() => setViewCard(null)}
-                  style={{ color: 'var(--mtg-text-light)' }}
-                  aria-label="Cerrar detalle"
-                >
-                  <X size={24} />
-                </Button>
-              </Modal.Header>
-              <Modal.Body>
-                <Row>
-                  <Col md={5} className="mb-4 mb-md-0 d-flex justify-content-center">
-                    {(() => {
-                      const uris = parseImageUris(viewCard.image_uris, viewCard.imageUrl);
-                      const src = uris?.normal || uris?.small || getScryfallImageUrl(viewCard.name);
-                      return src ? (
-                        <img
-                          src={src}
-                          alt={viewCard.name}
-                          className="img-fluid rounded shadow-lg"
-                          style={{ maxHeight: '450px', border: '1px solid rgba(212, 175, 55, 0.3)' }}
-                        />
-                      ) : (
-                        <div
-                          className="d-flex align-items-center justify-content-center rounded border border-warning w-100"
-                          style={{ height: '300px', background: 'rgba(0,0,0,0.3)' }}
-                        >
-                          <span className="text-light">Imagen no disponible</span>
-                        </div>
-                      );
-                    })()}
-                  </Col>
-                  <Col md={7}>
-                    {viewCard.type_line && (
-                      <div className="mb-3">
-                        <h5 className="mb-1" style={{ color: 'var(--mtg-text-light)' }}>{viewCard.type_line}</h5>
-                        {viewCard.mana_cost && (
-                          <p className="fs-5 mb-0" style={{ color: 'var(--mtg-gold-dark)', fontFamily: 'serif' }}>
-                            {viewCard.mana_cost}
-                          </p>
-                        )}
-                      </div>
-                    )}
+        <CardDetailsModal card={viewCard} show={!!viewCard} onHide={() => setViewCard(null)} />
 
-                    {viewCard.oracle_text && (
-                      <div
-                        className="p-3 rounded mb-3"
-                        style={{
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          borderLeft: '4px solid var(--mtg-gold-bright)',
-                          color: 'var(--mtg-text-light)'
-                        }}
-                      >
-                        <p className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>{viewCard.oracle_text}</p>
-                      </div>
-                    )}
-
-                    <Row className="g-3 mb-4">
-                      <Col xs={6}>
-                        <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Set</small>
-                          <span style={{ color: 'var(--mtg-text-light)' }}>{viewCard.set_name || 'Desconocido'}</span>
-                        </div>
-                      </Col>
-                      <Col xs={6}>
-                        <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Cantidad</small>
-                          <span className="fw-bold fs-5" style={{ color: 'var(--mtg-gold-bright)' }}>{viewCard.quantity}x</span>
-                        </div>
-                      </Col>
-                      {viewCard.rarity && (
-                        <Col xs={6}>
-                          <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Rareza</small>
-                            <span className="text-capitalize" style={{ color: 'var(--mtg-gold-bright)' }}>{viewCard.rarity}</span>
-                          </div>
-                        </Col>
-                      )}
-                      {(viewCard.prices?.eur || viewCard.prices?.usd) && (
-                        <Col xs={6}>
-                          <div className="p-2 rounded" style={{ background: 'rgba(74, 222, 128, 0.1)' }}>
-                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#4ade80' }}>Precio Unit.</small>
-                            <span className="fw-bold fs-5" style={{ color: '#4ade80' }}>
-                              €{parseFloat(viewCard.prices?.eur || viewCard.prices?.usd || 0).toFixed(2)}
-                            </span>
-                          </div>
-                        </Col>
-                      )}
-                      {viewCard.power && viewCard.toughness && (
-                        <Col xs={6}>
-                          <div className="p-2 rounded" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
-                            <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#f87171' }}>P/T</small>
-                            <span className="fw-bold fs-5" style={{ color: '#f87171' }}>
-                              {viewCard.power}/{viewCard.toughness}
-                            </span>
-                          </div>
-                        </Col>
-                      )}
-                    </Row>
-
-                    <Button
-                      className="btn-mtg-secondary w-100"
-                      onClick={() => setViewCard(null)}
-                    >
-                      Cerrar Detalle
-                    </Button>
-                  </Col>
-                </Row>
-              </Modal.Body>
-            </>
-          )}
-        </Modal>
+        <InfoModal
+          show={infoModal.show}
+          onHide={() => setInfoModal((previous) => ({ ...previous, show: false }))}
+          title={infoModal.title}
+          message={infoModal.message}
+        />
 
         {/* Scanner Modal */}
         <Modal 

@@ -1,152 +1,154 @@
-/* Sitemap Page - Responsive SVG Design */
-
 .sitemap-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  box-sizing: border-box;
-  overflow-x: hidden;
+  padding: 2rem 1rem 2.5rem;
+  background: linear-gradient(180deg, rgba(14, 14, 27, 0.98) 0%, rgba(5, 8, 16, 0.98) 100%);
+  color: var(--mtg-text-light);
 }
 
-/* Header */
 .sitemap-header {
-  text-align: center;
-  margin-bottom: 20px;
-  padding: 10px 0;
+  max-width: 1000px;
+  margin: 0 auto 1rem;
+}
+
+.sitemap-site-name {
+  margin: 0 0 0.25rem;
+  color: var(--mtg-gold-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
 }
 
 .sitemap-header h1 {
-  font-size: clamp(1.5rem, 5vw, 3rem);
-  font-weight: 800;
-  color: white;
-  text-shadow: 0 4px 6px rgba(0,0,0,0.2);
-  margin: 0 0 10px 0;
-}
-
-.sitemap-header p {
-  color: rgba(255,255,255,0.85);
-  font-size: clamp(0.9rem, 2.5vw, 1.2rem);
   margin: 0;
+  color: var(--mtg-gold-bright);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  font-weight: 800;
 }
 
-/* Container del diagrama */
-.sitemap-container {
-  width: 100%;
-  max-width: 1200px;
+.sitemap-description {
+  margin: 0.35rem 0 0;
+  color: var(--mtg-text-muted);
+}
+
+.sitemap-breadcrumbs {
+  max-width: 1000px;
+  margin: 0 auto 1rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 0.65rem;
+  color: var(--mtg-text-light);
+  font-size: 0.92rem;
+}
+
+.sitemap-panel {
+  max-width: 1000px;
   margin: 0 auto;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  padding: 20px;
-  box-sizing: border-box;
-}
-
-/* SVG responsive */
-.sitemap-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.sitemap-svg g {
-  cursor: pointer;
-}
-
-.sitemap-svg g:hover rect:not([fill="rgba(0,0,0,0.15)"]) {
-  filter: brightness(1.15);
-}
-
-.sitemap-svg text {
-  pointer-events: none;
-  user-select: none;
-}
-
-/* Leyenda */
-.sitemap-legend {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 25px;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  padding: 0 10px;
 }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.sitemap-view-button {
+  border: 1px solid rgba(255, 215, 0, 0.28);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--mtg-text-light);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
 
-.legend-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  flex-shrink: 0;
+.sitemap-view-button:hover,
+.sitemap-view-button:focus {
+  color: var(--mtg-gold-bright);
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 215, 0, 0.12);
 }
 
-.legend-item span {
-  color: white;
-  font-weight: 500;
-  font-size: clamp(0.75rem, 2vw, 1rem);
+.sitemap-view-button.active {
+  color: var(--mtg-bg-dark);
+  border-color: rgba(255, 215, 0, 0.9);
+  background: var(--mtg-gold-bright);
 }
 
-/* Footer */
+.sitemap-content {
+  max-width: 1000px;
+  margin: 1rem auto 0;
+  padding: 1.2rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sitemap-content h2 {
+  margin: 0 0 0.9rem;
+  color: var(--mtg-gold-bright);
+  font-size: clamp(1.1rem, 2.6vw, 1.4rem);
+}
+
+.sitemap-tree-list {
+  margin: 0;
+  padding-left: 1.45rem;
+}
+
+.sitemap-tree-list li {
+  margin-bottom: 0.35rem;
+  line-height: 1.45;
+}
+
+.sitemap-tree-list ol {
+  margin-top: 0.3rem;
+  padding-left: 1.35rem;
+}
+
+.sitemap-link {
+  color: var(--mtg-text-light);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 215, 0, 0.45);
+  text-underline-offset: 2px;
+}
+
+.sitemap-link:hover,
+.sitemap-link:focus {
+  color: var(--mtg-gold-bright);
+}
+
+.sitemap-text {
+  color: var(--mtg-text-light);
+  font-weight: 600;
+}
+
+.sitemap-alphabetical-list {
+  columns: 2;
+  column-gap: 1.5rem;
+}
+
 .sitemap-footer {
-  text-align: center;
-  margin-top: 20px;
-  color: rgba(255,255,255,0.7);
-  font-size: clamp(0.75rem, 2vw, 1rem);
+  max-width: 1000px;
+  margin: 1rem auto 0;
+  color: var(--mtg-text-muted);
+  font-size: 0.9rem;
 }
 
 .sitemap-footer p {
-  margin: 0;
+  margin: 0.2rem 0;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .sitemap-page {
-    padding: 15px 10px;
+    padding: 1.3rem 0.75rem 2rem;
   }
 
-  .sitemap-container {
-    padding: 15px 10px;
-    border-radius: 12px;
+  .sitemap-content {
+    padding: 1rem 0.8rem;
   }
 
-  .sitemap-header {
-    margin-bottom: 15px;
-  }
-
-  .sitemap-legend {
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  .legend-color {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sitemap-page {
-    padding: 10px 5px;
-  }
-
-  .sitemap-container {
-    padding: 10px 5px;
-    border-radius: 8px;
-  }
-
-  .sitemap-legend {
-    gap: 8px;
-  }
-}
-
-/* Touch devices - larger hit areas */
-@media (hover: none) {
-  .sitemap-svg g rect {
-    stroke-width: 4px;
+  .sitemap-alphabetical-list {
+    columns: 1;
   }
 }

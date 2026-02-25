@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Navbar from './Navbar';
 
@@ -11,8 +11,14 @@ jest.mock('../context/AuthContext', () => ({
 const { useAuth } = require('../context/AuthContext');
 
 describe('Navbar Component - v2.0 MTG Branding (Bootstrap)', () => {
+  const setViewportWidth = (width) => {
+    Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: width });
+    window.dispatchEvent(new Event('resize'));
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
+    setViewportWidth(1280);
   });
 
   describe('Renderizado básico', () => {
@@ -56,24 +62,69 @@ describe('Navbar Component - v2.0 MTG Branding (Bootstrap)', () => {
       });
     });
 
-    it('debería mostrar enlace "Inicio"', () => {
+    it('debería mantener enlace a home en el logo', () => {
       render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
-      expect(screen.getByText('Inicio')).toBeInTheDocument();
+      const brandLink = screen.getByRole('link', { name: /MTG NEXUS/i });
+      expect(brandLink).toHaveAttribute('href', '/home');
+      expect(screen.queryByText('Inicio')).not.toBeInTheDocument();
     });
 
-    it('debería mostrar enlace "Buscar"', () => {
+    it('debería mostrar dropdown "Info Proyecto"', () => {
       render(
         <BrowserRouter>
           <Navbar />
         </BrowserRouter>
       );
 
-      expect(screen.getByText('Buscar')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Info Proyecto/i })).toBeInTheDocument();
+    });
+
+    it('debería mostrar dropdown "Herramientas"', () => {
+      render(
+        <BrowserRouter>
+          <Navbar />
+        </BrowserRouter>
+      );
+
+      expect(screen.getByRole('button', { name: /Herramientas/i })).toBeInTheDocument();
+    });
+
+    it('debería listar elementos del dropdown Info Proyecto', () => {
+      render(
+        <BrowserRouter>
+          <Navbar />
+        </BrowserRouter>
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /Info Proyecto/i }));
+
+      expect(screen.getByText('Sobre mi')).toBeInTheDocument();
+      expect(screen.getByText('Estudios visuales')).toBeInTheDocument();
+      expect(screen.getByText('Mapa Web')).toBeInTheDocument();
+    });
+
+    it('en móvil debería renderizar títulos y subopciones sin dropdowns', () => {
+      setViewportWidth(390);
+
+      render(
+        <BrowserRouter>
+          <Navbar />
+        </BrowserRouter>
+      );
+
+      expect(screen.queryByRole('button', { name: /Info Proyecto/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Herramientas/i })).not.toBeInTheDocument();
+
+      expect(screen.getByText('Info Proyecto')).toBeInTheDocument();
+      expect(screen.getByText('Herramientas')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Sobre mi/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Inventario/i })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /Mazos/i })).toBeInTheDocument();
     });
 
     it('debería mostrar botón de Iniciar Sesión', () => {
@@ -104,6 +155,7 @@ describe('Navbar Component - v2.0 MTG Branding (Bootstrap)', () => {
         </BrowserRouter>
       );
 
+      fireEvent.click(screen.getByRole('button', { name: /Herramientas/i }));
       expect(screen.getByText('Mazos')).toBeInTheDocument();
     });
 
@@ -114,6 +166,7 @@ describe('Navbar Component - v2.0 MTG Branding (Bootstrap)', () => {
         </BrowserRouter>
       );
 
+      fireEvent.click(screen.getByRole('button', { name: /Herramientas/i }));
       expect(screen.getByText('Inventario')).toBeInTheDocument();
     });
 

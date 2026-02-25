@@ -1,15 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Modal, Form, Spinner, Badge } from 'react-bootstrap';
 import { Plus, Trash2, Sparkles } from 'lucide-react';
 import deckService from '../services/deckService';
+import { resolveFlowPath } from '../utils/versionRouting';
+import ConfirmActionModal from '../components/ConfirmActionModal';
+import FlashMessage from '../components/FlashMessage';
 
 const DashboardPage = () => {
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deckToDelete, setDeckToDelete] = useState(null);
   const [newDeckName, setNewDeckName] = useState('');
   const [newDeckFormat, setNewDeckFormat] = useState('');
+  const [flash, setFlash] = useState({ show: false, message: '', variant: 'success' });
+  const location = useLocation();
+
+  const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
 
   useEffect(() => {
     loadDecks();
@@ -36,20 +45,31 @@ const DashboardPage = () => {
       setNewDeckName('');
       setNewDeckFormat('');
       setShowCreateModal(false);
-      loadDecks();
+      await loadDecks();
+      setFlash({ show: true, message: 'Mazo creado correctamente.', variant: 'success' });
     } catch (error) {
       console.error('Error al crear mazo:', error);
+      setFlash({ show: true, message: 'No se pudo crear el mazo.', variant: 'danger' });
     }
   };
 
-  const handleDeleteDeck = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este mazo?')) {
-      try {
-        await deckService.deleteDeck(id);
-        loadDecks();
-      } catch (error) {
-        console.error('Error al eliminar mazo:', error);
-      }
+  const handleDeleteDeck = (id) => {
+    setDeckToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteDeck = async () => {
+    if (!deckToDelete) return;
+    try {
+      await deckService.deleteDeck(deckToDelete);
+      await loadDecks();
+      setFlash({ show: true, message: 'Mazo eliminado.', variant: 'warning' });
+    } catch (error) {
+      console.error('Error al eliminar mazo:', error);
+      setFlash({ show: true, message: 'No se pudo eliminar el mazo.', variant: 'danger' });
+    } finally {
+      setDeckToDelete(null);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -73,6 +93,13 @@ const DashboardPage = () => {
       style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}
     >
       <Container>
+        <FlashMessage
+          show={flash.show}
+          message={flash.message}
+          variant={flash.variant}
+          onClose={() => setFlash((previous) => ({ ...previous, show: false }))}
+        />
+
         {/* Header */}
         <Row className="mb-5 align-items-center">
           <Col>
@@ -109,7 +136,7 @@ const DashboardPage = () => {
             </Card.Body>
           </Card>
         ) : (
-          <Row md={2} lg={3} className="g-4">
+          <Row xs={1} md={2} lg={3} className="g-4">
             {decks.map((deck) => (
               <Col key={deck.id}>
                 <Card className="card-mtg h-100">
@@ -157,7 +184,7 @@ const DashboardPage = () => {
                     </div>
 
                     <Link
-                      to={`/decks/${deck.id}`}
+                      to={toFlowPath(`/decks/${deck.id}`)}
                       className="btn btn-mtg-primary w-100 mt-auto"
                     >
                       Ver Mazo
@@ -227,6 +254,20 @@ const DashboardPage = () => {
             </Form>
           </Modal.Body>
         </Modal>
+
+        <ConfirmActionModal
+          show={showDeleteConfirm}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setDeckToDelete(null);
+          }}
+          onConfirm={confirmDeleteDeck}
+          title="Eliminar mazo"
+          message="¿Estás seguro de eliminar este mazo? Esta acción no se puede deshacer."
+          confirmText="Eliminar"
+          cancelText="Cancelar"
+          confirmVariant="danger"
+        />
       </Container>
     </div>
   );

@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Spinner, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Spinner } from 'react-bootstrap';
 import { Search } from 'lucide-react';
 import cardService from '../services/cardService';
+import CardDetailsModal from '../components/CardDetailsModal';
+import { isNoUsableFlow } from '../utils/flowMode';
 
 const CardSearchPage = () => {
+  const noUsableMode = isNoUsableFlow(window.location.pathname || '/home');
   const [query, setQuery] = useState('');
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,7 +18,8 @@ const CardSearchPage = () => {
 
     setLoading(true);
     try {
-      const response = await cardService.searchCards(query);
+      const searchQuery = noUsableMode ? `!"${query}"` : query;
+      const response = await cardService.searchCards(searchQuery);
       setCards(response.data || []);
     } catch (error) {
       console.error('Error al buscar cartas:', error);
@@ -28,7 +32,7 @@ const CardSearchPage = () => {
   return (
     <Container className="py-4">
       <h1 className="display-5 fw-bold mb-2" style={{ color: 'var(--mtg-gold-bright)' }}>🔍 Buscar Cartas</h1>
-      <p className="mb-4" style={{ color: 'var(--mtg-text-muted)' }}>Encuentra cualquier carta de Magic The Gathering</p>
+      <p className="mb-4 ux-helper-text" style={{ color: 'var(--mtg-text-muted)' }}>Encuentra cualquier carta de Magic The Gathering</p>
 
       {/* Buscador */}
       <Card className="card-mtg mb-4">
@@ -51,7 +55,7 @@ const CardSearchPage = () => {
                 </Button>
               </Col>
             </Row>
-            <p className="mt-3 mb-0 small" style={{ color: 'var(--mtg-text-muted)' }}>
+            <p className="mt-3 mb-0 small ux-helper-text" style={{ color: 'var(--mtg-text-muted)' }}>
               💡 Ejemplos: "Lightning Bolt", "type:creature", "c:red"
             </p>
           </Form>
@@ -83,18 +87,16 @@ const CardSearchPage = () => {
                   >
                     {/* Imagen */}
                     <div className="card-image-container mb-2 position-relative overflow-hidden rounded" style={{ aspectRatio: '63/88' }}>
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={card.name}
-                          className="w-100 h-100 object-fit-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-dark text-center p-2">
-                          <span className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>{card.name}</span>
-                        </div>
-                      )}
+                      <img
+                        src={imageUrl || `${process.env.PUBLIC_URL}/logo.jpg`}
+                        alt={card.name}
+                        className="w-100 h-100 object-fit-cover"
+                        loading="lazy"
+                        onError={(event) => {
+                          event.target.onerror = null;
+                          event.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`;
+                        }}
+                      />
                     </div>
                     
                     {/* Info */}
@@ -126,116 +128,7 @@ const CardSearchPage = () => {
         </Card>
       ) : null}
 
-      {/* Modal de detalle ESTILIZADO */}
-      <Modal 
-        show={!!selectedCard} 
-        onHide={() => setSelectedCard(null)} 
-        size="lg" 
-        centered
-        contentClassName="card-mtg-premium"
-      >
-        {selectedCard && (
-          <>
-            <Modal.Header className="border-0">
-              <Modal.Title className="fw-bold" style={{ color: 'var(--mtg-gold-bright)' }}>
-                {selectedCard.name}
-              </Modal.Title>
-              <Button 
-                variant="link" 
-                className="p-0 text-decoration-none"
-                onClick={() => setSelectedCard(null)}
-                style={{ color: 'var(--mtg-text-light)' }}
-              >
-                ✕
-              </Button>
-            </Modal.Header>
-            <Modal.Body>
-              <Row>
-                <Col md={5} className="mb-4 mb-md-0 d-flex justify-content-center">
-                  {selectedCard.image_uris?.normal ? (
-                    <img
-                      src={selectedCard.image_uris.normal}
-                      alt={selectedCard.name}
-                      className="img-fluid rounded shadow-lg"
-                      style={{ maxHeight: '450px', border: '1px solid rgba(212, 175, 55, 0.3)' }}
-                    />
-                  ) : (
-                    <div 
-                      className="d-flex align-items-center justify-content-center rounded border border-warning w-100" 
-                      style={{ height: '300px', background: 'rgba(0,0,0,0.3)' }}
-                    >
-                      <span className="text-light">Imagen no disponible</span>
-                    </div>
-                  )}
-                </Col>
-                <Col md={7}>
-                  <div className="mb-4">
-                    <h5 className="mb-2" style={{ color: 'var(--mtg-text-light)' }}>{selectedCard.type_line}</h5>
-                    <p className="fs-5 mb-0" style={{ color: 'var(--mtg-gold-dark)', fontFamily: 'serif' }}>
-                      {selectedCard.mana_cost || 'Sin coste'}
-                    </p>
-                  </div>
-                  
-                  {selectedCard.oracle_text && (
-                    <div 
-                      className="p-3 rounded mb-4" 
-                      style={{ 
-                        background: 'rgba(255, 255, 255, 0.05)', 
-                        borderLeft: '4px solid var(--mtg-gold-bright)',
-                        color: 'var(--mtg-text-light)'
-                      }}
-                    >
-                      <p className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>{selectedCard.oracle_text}</p>
-                    </div>
-                  )}
-
-                  <Row className="g-3 mb-4">
-                    <Col xs={6}>
-                      <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Set</small>
-                        <span style={{ color: 'var(--mtg-text-light)' }}>{selectedCard.set_name}</span>
-                      </div>
-                    </Col>
-                    <Col xs={6}>
-                      <div className="p-2 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                        <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#9ca3af' }}>Rareza</small>
-                        <span className="text-capitalize" style={{ color: 'var(--mtg-gold-bright)' }}>{selectedCard.rarity}</span>
-                      </div>
-                    </Col>
-                    {selectedCard.prices?.eur && (
-                      <Col xs={6}>
-                        <div className="p-2 rounded" style={{ background: 'rgba(74, 222, 128, 0.1)' }}>
-                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#4ade80' }}>Precio Est.</small>
-                          <span className="fw-bold fs-5" style={{ color: '#4ade80' }}>
-                            €{parseFloat(selectedCard.prices.eur).toFixed(2)}
-                          </span>
-                        </div>
-                      </Col>
-                    )}
-                    {selectedCard.power && selectedCard.toughness && (
-                      <Col xs={6}>
-                        <div className="p-2 rounded" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
-                          <small className="d-block text-uppercase" style={{ fontSize: '0.7rem', color: '#f87171' }}>P/T</small>
-                          <span className="fw-bold fs-5" style={{ color: '#f87171' }}>
-                            {selectedCard.power}/{selectedCard.toughness}
-                          </span>
-                        </div>
-                      </Col>
-                    )}
-                  </Row>
-
-                  <Button
-                    className="btn-mtg-secondary w-100"
-                    onClick={() => setSelectedCard(null)}
-                  >
-                    Cerrar Detalle
-                  </Button>
-                </Col>
-              </Row>
-            </Modal.Body>
-          </>
-        )}
-      </Modal>
+      <CardDetailsModal card={selectedCard} show={!!selectedCard} onHide={() => setSelectedCard(null)} />
     </Container>
   );
 };
