@@ -88,25 +88,22 @@ apps/
 ├── non-accessible/            # 🔴 Versión No Accesible (puerto 3001)
 │   └── src/                   # Estructura idéntica para experimentos de accesibilidad
 │
-└── non-usable/                # 🟡 Versión No Usable (puerto 3002)
-    └── src/                   # Estructura idéntica para experimentos de usabilidad
+└── src/                       # Única aplicación frontend unificada
 ```
 
 **Características del LoginPage (accessible-usable):**
-- Login unificado para las 3 aplicaciones
+- Login unificado para los 3 flujos
 - Selector de variante (Accesible, No Accesible, No Usable)
-- Redirige con token en URL: `http://localhost:PORT/dashboard?token=X&user=Y`
-- Mantiene sesión sincronizada entre aplicaciones
+- Redirige con token en URL dentro de la misma app y flujo
+- Mantiene navegación consistente por sufijo de ruta (`-no-accesible`, `-no-usable`)
 
 **Nota sobre autenticación:**
-Las 3 aplicaciones comparten el mismo backend y contexto de autenticación.
-El token JWT válido en una app funciona en todas.
+Los 3 flujos comparten el mismo backend y contexto de autenticación.
+El token JWT válido funciona en cualquier flujo de la aplicación unificada.
 ```
 │   ├── index.js
 │   └── index.css
 ├── .env.example
-├── tailwind.config.js
-├── postcss.config.js
 └── package.json
 ```
 

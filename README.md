@@ -34,24 +34,22 @@ Plataforma integral para jugadores, coleccionistas y vendedores de Magic: The Ga
 ```
 MTG-Nexus-Hub/
 ├── 📁 backend/               # ⚙️ Servidor backends/
-├── 📁 apps/                  # 🎨 Aplicaciones React multi-versión
-│   ├── accessible-usable/    # 🟢 Versión principal (puerto 3000)
-│   ├── non-accessible/       # 🔴 Variante (puerto 3001)
-│   └── non-usable/           # 🟡 Variante (puerto 3002)
+├── 📁 apps/                  # 🎨 Aplicación React unificada
+│   └── accessible-usable/    # 🟢 Frontend único (puerto 3000)
 ├── 📁 docs/                  # 📚 Documentación
 │   ├── ARCHITECTURE.md
 │   ├── INSTALLATION.md
 │   ├── TESTING.md
 │   └── ...
 ├── 📁 scripts/               # 🔧 Scripts de inicio y despliegue
-│   ├── start-all.ps1
-│   ├── start-all.sh
-│   └── ...
+│   └── start-all.bat
 └── README.md
 ```
 
-**Nota:** Las 3 apps comparten el mismo backend y contexto de autenticación. 
-El login centralizado en `apps/accessible-usable/` permite elegir cuál versión usar.
+**Nota:** El frontend unificado mantiene tres flujos por rutas paralelas:
+- Base: `/home`, `/dashboard`, etc.
+- No usable: `/home-no-usable`, `/dashboard-no-usable`, etc.
+- No accesible: `/home-no-accesible`, `/dashboard-no-accesible`, etc.
 
 ## 🔧 Instalación y Configuración
 
@@ -97,7 +95,19 @@ Esto crea:
 
 Ver [docs/DATABASE_RESET.md](./docs/DATABASE_RESET.md) para más opciones.
 
-### Frontend (Aplicación Principal)
+### Arranque unificado (DB + Backend + Frontend)
+
+```bash
+# Desde la raíz del proyecto (Windows)
+npm start
+```
+
+Este comando inicia en orden:
+- Base de datos (Docker)
+- Backend (`localhost:5000`)
+- Frontend unificado (`localhost:3000`)
+
+### Frontend (modo manual)
 
 ```bash
 cd apps/accessible-usable

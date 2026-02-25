@@ -1,0 +1,8 @@
+{
+  "name": "mtg-nexus-hub",
+  "private": true,
+  "version": "2.0.0",
+  "scripts": {
+    "start": "scripts\\start-all.bat"
+  }
+}

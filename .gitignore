@@ -47,3 +47,7 @@ prisma/migrations/
 .cache/
 .temp/
 tmp/
+Context/
+estudios/
+Estudios/
+video-guiones/

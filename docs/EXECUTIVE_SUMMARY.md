@@ -51,14 +51,13 @@
 #### Configuración (5 archivos)
 - ✅ `package.json` - Dependencias React
 - ✅ `.env.example` - Variables de entorno
-- ✅ `tailwind.config.js` - Configuración Tailwind
-- ✅ `postcss.config.js` - PostCSS
+- ✅ `bootstrap` + `react-bootstrap` - Sistema de estilos UI
 - ✅ `index.html` - HTML principal
 
 #### Aplicación Principal (3 archivos)
 - ✅ `index.js` - Punto de entrada
 - ✅ `App.jsx` - Router principal
-- ✅ `index.css` - Estilos globales + Tailwind
+- ✅ `index.css` - Estilos globales + Bootstrap
 
 #### Componentes (3 archivos)
 - ✅ `Navbar.jsx` - Barra de navegación

@@ -62,7 +62,7 @@
 
 ### Cambios de Configuración
 
-#### Tailwind Config (`frontend/tailwind.config.js`)
+#### Configuración de estilos del frontend
 - Extensión de paleta de colores MTG completa
 - Nuevas fuentes (magic, nexus)
 - Gradientes personalizados (mtg-gradient, mtg-gold, mtg-blue)
@@ -102,7 +102,6 @@ CHANGELOG.md                                 # Este archivo
 
 ### Modificados
 ```
-frontend/tailwind.config.js                  # Paleta MTG completa
 frontend/src/index.css                       # Estilos globales MTG
 frontend/src/components/Navbar.jsx           # Navbar con logo y colores
 frontend/src/pages/HomePage.jsx              # HomePage con tema MTG

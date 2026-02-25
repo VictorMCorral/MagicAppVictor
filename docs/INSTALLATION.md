@@ -256,7 +256,7 @@ Para automatizar todo el proceso (conectar, actualizar y desplegar) desde tu ord
 - [Documentación de Scryfall API](https://scryfall.com/docs/api)
 - [Documentación de Prisma](https://www.prisma.io/docs)
 - [Documentación de React](https://react.dev)
-- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Bootstrap](https://getbootstrap.com/docs)
 
 ## 🎯 Próximos Pasos (Roadmap)
 
