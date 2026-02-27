@@ -136,7 +136,9 @@ deploy_frontend() {
   sudo mkdir -p "$FRONTEND_BUILD_DIR/videos/visual-studies"
   if [ -d "$REMOTE_VIDEOS_DIR" ]; then
     log "Publicando videos de estudios visuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies"
-    sudo rsync -a "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
+    # --checksum fuerza actualización aunque el nombre sea el mismo y coincidan tamaño/mtime.
+    # --delete evita que queden archivos antiguos en destino.
+    sudo rsync -a --delete --checksum "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
   else
     log "WARNING: no existe ${REMOTE_VIDEOS_DIR}. El frontend se desplegará sin videos."
   fi
@@ -164,6 +166,13 @@ server {
 
     location / {
         try_files \$uri /index.html;
+    }
+
+    location ~* \\.mp4$ {
+      add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+      add_header Pragma "no-cache" always;
+      add_header Expires "0" always;
+      try_files \$uri =404;
     }
 }
 NGINX

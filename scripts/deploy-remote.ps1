@@ -227,8 +227,15 @@ if [ ! -d '__REMOTE_REPO_DIR__/.git' ]; then
 fi
 cd '__REMOTE_REPO_DIR__'
 git remote set-url origin '__REPO_URL__'
+git reset --hard HEAD || true
+git clean -fd || true
 git fetch origin --prune
-git pull --ff-only
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)
+if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
+    CURRENT_BRANCH=main
+fi
+git checkout "$CURRENT_BRANCH" || git checkout -b "$CURRENT_BRANCH" "origin/$CURRENT_BRANCH"
+git reset --hard "origin/$CURRENT_BRANCH" || git pull --ff-only
 '@
 Invoke-RemoteScript -Content (Apply-Replacements -Text $repoScript -Map $replacements) -TimeOutSeconds 300
 
