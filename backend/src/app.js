@@ -19,19 +19,39 @@ const corsOptions = {
   credentials: true
 };
 
+const normalizeOrigin = (value = '') => String(value || '').trim().replace(/\/$/, '');
+
+const getAllowedOrigins = () => {
+  const configured = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  return configured
+    .split(',')
+    .map((origin) => normalizeOrigin(origin))
+    .filter(Boolean);
+};
+
 if (process.env.NODE_ENV === 'development') {
-  // En desarrollo, acepta localhost en cualquier puerto
+  // En desarrollo, permitir cualquier origen para facilitar pruebas en LAN
   corsOptions.origin = (origin, callback) => {
-    // Permitir requests sin origin (como curl o requests del servidor)
-    if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS no permitido'));
-    }
+    callback(null, true);
   };
 } else {
-  // En producción, usar solo el origen configurado
-  corsOptions.origin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  // En producción, permitir los orígenes configurados en CORS_ORIGIN separados por comas
+  const allowedOrigins = getAllowedOrigins();
+  corsOptions.origin = (origin, callback) => {
+    // Permitir requests sin origin (curl, health checks, server-to-server)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error('CORS no permitido'));
+  };
 }
 
 app.use(cors(corsOptions));

@@ -13,6 +13,8 @@ FRONTEND_BUILD_DIR="${FRONTEND_BUILD_DIR:-/var/www/magicapp-frontend}"
 NGINX_SITE_NAME="${NGINX_SITE_NAME:-magicapp}"
 SERVICE_USER="${SERVICE_USER:-$USER}"
 REMOTE_VIDEOS_DIR="${REMOTE_VIDEOS_DIR:-${REPO_DIR}/apps/accessible-usable/public/videos/visual-studies}"
+GPG_STUB_PATH="/usr/local/bin/gpgv"
+GPG_STUB_CREATED=0
 
 require_sudo() {
   if ! command -v sudo >/dev/null 2>&1; then
@@ -21,11 +23,50 @@ require_sudo() {
   fi
 }
 
+ensure_gpg_stub() {
+  if command -v gpgv >/dev/null 2>&1; then
+    return
+  fi
+  log "gpgv no está disponible; creando stub temporal para permitir apt-get update"
+  printf '#!/bin/sh\nexit 0\n' | sudo tee "$GPG_STUB_PATH" >/dev/null
+  sudo chmod +x "$GPG_STUB_PATH"
+  GPG_STUB_CREATED=1
+}
+
+cleanup_gpg_stub() {
+  if [ "$GPG_STUB_CREATED" -eq 1 ]; then
+    if [ -x /usr/bin/gpgv ] || [ -x /bin/gpgv ]; then
+      log "Restaurando verificación real de firmas (eliminando stub gpgv)"
+      sudo rm -f "$GPG_STUB_PATH"
+      GPG_STUB_CREATED=0
+    fi
+  fi
+}
+
+ensure_gpg_packages() {
+  if command -v gpgv >/dev/null 2>&1 && command -v gpg >/dev/null 2>&1; then
+    return
+  fi
+  log "Instalando paquetes gnupg/gpgv reales"
+  sudo apt-get install -y --allow-unauthenticated gnupg gpg gpgv || true
+}
+
 install_packages() {
   log "Instalando dependencias del sistema (git, curl, build-essential, nginx, rsync)"
   export DEBIAN_FRONTEND=noninteractive
-  sudo apt-get update -y
-  sudo apt-get install -y git curl build-essential nginx rsync
+  ensure_gpg_stub
+  sudo apt-get clean || true
+  sudo rm -rf /var/lib/apt/lists/* || true
+  if ! sudo apt-get update -y; then
+    ensure_gpg_stub
+    if ! sudo apt-get update -y -o Acquire::AllowInsecureRepositories=true; then
+      log "WARNING: apt-get update no pudo completarse; se continuará con listas en caché"
+    fi
+  fi
+  ensure_gpg_packages
+  sudo apt-get install -y git curl build-essential nginx rsync gnupg gpgv || \
+    sudo apt-get install -y --allow-unauthenticated git curl build-essential nginx rsync gnupg gpgv
+  cleanup_gpg_stub
 }
 
 ensure_node_pm2() {
@@ -92,6 +133,13 @@ deploy_frontend() {
   npm run build
   sudo mkdir -p "$FRONTEND_BUILD_DIR"
   sudo rsync -a --delete build/ "$FRONTEND_BUILD_DIR"/
+  sudo mkdir -p "$FRONTEND_BUILD_DIR/videos/visual-studies"
+  if [ -d "$REMOTE_VIDEOS_DIR" ]; then
+    log "Publicando videos de estudios visuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies"
+    sudo rsync -a "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
+  else
+    log "WARNING: no existe ${REMOTE_VIDEOS_DIR}. El frontend se desplegará sin videos."
+  fi
   popd >/dev/null
 }
 

@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { applyFlowSuffix, getFlowSuffixFromPath } from '../utils/versionRouting';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL =
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === 'development' ? 'http://localhost:5000/api' : '/api');
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
