@@ -272,7 +272,13 @@ cd '__REMOTE_REPO_DIR__/apps/accessible-usable'
 npm install
 npm run build
 run_sudo mkdir -p '__FRONTEND_BUILD__'
-run_sudo rsync -a --delete build/ '__FRONTEND_BUILD__'/
+run_sudo rsync -a --delete --exclude 'videos/visual-studies/***' build/ '__FRONTEND_BUILD__'/
+run_sudo mkdir -p '__FRONTEND_BUILD__/videos/visual-studies'
+if [ -d '__REMOTE_VIDEOS_DIR__' ]; then
+    run_sudo rsync -a --delete --checksum '__REMOTE_VIDEOS_DIR__'/ '__FRONTEND_BUILD__/videos/visual-studies'/
+else
+    echo "WARNING: no existe __REMOTE_VIDEOS_DIR__. Se mantienen los videos actuales en __FRONTEND_BUILD__/videos/visual-studies." >&2
+fi
 '@
 Invoke-RemoteScript -Content (Apply-Replacements -Text $frontendScript -Map $replacements) -TimeOutSeconds 1800
 

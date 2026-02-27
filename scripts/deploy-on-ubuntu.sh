@@ -132,7 +132,8 @@ deploy_frontend() {
   npm install
   npm run build
   sudo mkdir -p "$FRONTEND_BUILD_DIR"
-  sudo rsync -a --delete build/ "$FRONTEND_BUILD_DIR"/
+  # Evita que --delete borre videos subidos fuera del build.
+  sudo rsync -a --delete --exclude 'videos/visual-studies/***' build/ "$FRONTEND_BUILD_DIR"/
   sudo mkdir -p "$FRONTEND_BUILD_DIR/videos/visual-studies"
   if [ -d "$REMOTE_VIDEOS_DIR" ]; then
     log "Publicando videos de estudios visuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies"
@@ -140,7 +141,7 @@ deploy_frontend() {
     # --delete evita que queden archivos antiguos en destino.
     sudo rsync -a --delete --checksum "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
   else
-    log "WARNING: no existe ${REMOTE_VIDEOS_DIR}. El frontend se desplegará sin videos."
+    log "WARNING: no existe ${REMOTE_VIDEOS_DIR}. Se mantienen los videos actuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies."
   fi
   popd >/dev/null
 }
