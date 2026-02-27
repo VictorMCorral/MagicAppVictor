@@ -25,7 +25,7 @@ describe('LoginPage (Bootstrap)', () => {
     const loginMock = jest.fn().mockRejectedValue({
       response: {
         data: {
-          message: 'No existe un usuario registrado con ese email',
+          message: 'No existe un usuario registrado con ese email o usuario',
           errors: [
             { msg: 'Email inválido' },
             { msg: 'La contraseña es requerida' }
@@ -56,7 +56,7 @@ describe('LoginPage (Bootstrap)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Iniciar Sesión/i }));
 
     expect(await screen.findByText(/Se detectaron errores al iniciar sesión/i)).toBeInTheDocument();
-    expect(screen.getByText('No existe un usuario registrado con ese email')).toBeInTheDocument();
+    expect(screen.getByText('No existe un usuario registrado con ese email o usuario')).toBeInTheDocument();
     expect(screen.getByText('Email: Email inválido')).toBeInTheDocument();
     expect(screen.getByText('Contraseña: La contraseña es requerida')).toBeInTheDocument();
     expect(loginMock).toHaveBeenCalledWith('foo@bar.com', '');

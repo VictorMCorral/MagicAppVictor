@@ -47,7 +47,10 @@ prisma/migrations/
 .cache/
 .temp/
 tmp/
-Context/
 estudios/
 Estudios/
 video-guiones/
+Recursos/
+recursos/
+apps/accessible-usable/public/videos/visual-studies/
+apps/accesible-usable/public/videos/visual-studies/

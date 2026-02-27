@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { BookOpen, Search, Upload, Download, Camera, TrendingUp, Sparkles, Clock3 } from 'lucide-react';
 import { Container, Row, Col, Button, Card } from 'react-bootstrap';
 import { resolveFlowPath } from '../utils/versionRouting';
+import { isNoUsableFlow } from '../utils/flowMode';
 import roadmap from '../config/roadmap.json';
 
 const HomePage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const toFlowPath = (path) => resolveFlowPath(path, location.pathname);
+  const isNoUsable = isNoUsableFlow(location.pathname);
 
   return (
     <div className="page-container bg-mtg-gradient">
@@ -76,7 +78,10 @@ const HomePage = () => {
                 const icons = [Search, BookOpen, Upload, Download, Camera, TrendingUp, TrendingUp];
                 const FeatureIcon = icons[index] || Sparkles;
                 return (
-                  <div className="d-flex align-items-start gap-3" key={feature}>
+                  <div
+                    className={`d-flex align-items-start gap-3 ${isNoUsable ? 'no-usable-feature-button' : ''}`}
+                    key={feature}
+                  >
                     <FeatureIcon size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                     <div>
                       <h5 className="text-mtg-light fw-bold mb-0">{feature}</h5>
@@ -96,7 +101,10 @@ const HomePage = () => {
                 <h2 className="text-mtg-gold fw-bold text-center mb-4">⏳ {roadmap.upcoming.title}</h2>
                 <div className="d-flex flex-column gap-3">
                   {roadmap.upcoming.features.map((feature) => (
-                    <div className="d-flex align-items-start gap-3" key={feature}>
+                    <div
+                      className={`d-flex align-items-start gap-3 ${isNoUsable ? 'no-usable-feature-button' : ''}`}
+                      key={feature}
+                    >
                       <Clock3 size={24} className="text-mtg-gold flex-shrink-0 mt-1" />
                       <div>
                         <h5 className="text-mtg-light fw-bold mb-0">{feature}</h5>

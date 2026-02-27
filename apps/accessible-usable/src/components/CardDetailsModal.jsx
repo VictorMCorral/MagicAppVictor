@@ -41,20 +41,21 @@ const CardDetailsModal = ({ card, show, onHide }) => {
         </Button>
       </Modal.Header>
       <Modal.Body>
-        <Row>
-          <Col md={5} className="mb-4 mb-md-0 d-flex justify-content-center">
-            <img
-              src={imageUrl}
-              alt={name}
-              className="img-fluid rounded shadow-lg"
-              style={{ maxHeight: '450px', border: '1px solid rgba(212, 175, 55, 0.3)' }}
-              onError={(event) => {
-                event.target.onerror = null;
-                event.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`;
-              }}
-            />
+        <Row className="g-4 card-detail-layout">
+          <Col lg={5} className="mb-4 mb-lg-0 d-flex justify-content-center">
+            <div className="card-detail-image-shell">
+              <img
+                src={imageUrl}
+                alt={name}
+                className="card-detail-image"
+                onError={(event) => {
+                  event.target.onerror = null;
+                  event.target.src = `${process.env.PUBLIC_URL}/mtg-nexus-logo.svg`;
+                }}
+              />
+            </div>
           </Col>
-          <Col md={7}>
+          <Col lg={7}>
             <div className="mb-4">
               <h5 className="mb-2" style={{ color: 'var(--mtg-text-light)' }}>{typeLine}</h5>
               <p className="fs-5 mb-0" style={{ color: 'var(--mtg-gold-dark)', fontFamily: 'serif' }}>{manaCost}</p>

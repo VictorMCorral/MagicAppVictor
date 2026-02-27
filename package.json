@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.0.0",
   "scripts": {
-    "start": "scripts\\start-all.bat"
+    "start": "scripts\\start-all.bat",
+    "sync:visual-studies": "node scripts/sync-visual-studies.js"
   }
 }

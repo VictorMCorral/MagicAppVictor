@@ -114,7 +114,7 @@ describe('Auth Endpoints', () => {
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('No existe un usuario registrado con ese email');
+      expect(response.body.message).toBe('No existe un usuario registrado con ese email o usuario');
     });
 
     it('debería fallar indicando que la contraseña no coincide', async () => {

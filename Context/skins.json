@@ -1,0 +1,119 @@
+{
+    "project_metadata": {
+        "name": "MTG Deck Builder - Unified App Multi-Flow",
+        "common_elements": [
+            "login",
+            "backend_api"
+        ],
+        "infrastructure_logic": {
+            "single_app": true,
+            "frontend_app": "apps/accessible-usable",
+            "setup_commands": [
+                "npm install",
+                "npm start"
+            ],
+            "routing_strategy": "La aplicación usa rutas con sufijos por flujo. El login debe redirigir al home del flujo seleccionado sin cambiar de app.",
+            "flow_suffixes": {
+                "accessible_usable": "",
+                "non_accessible": "-no-accesible",
+                "non_usable": "-no-usable"
+            }
+        }
+    },
+    "modes": {
+        "accessible_usable": {
+            "id": "normal",
+            "label": "Accesible y Usable",
+            "path": "/home",
+            "flowSuffix": "",
+            "implementation_directives": "Aplicar mejores prácticas WCAG 2.1 y UX fluida. Todo debe ser operable por teclado y legible.",
+            "settings": {
+                "altTextEnabled": true,
+                "keyboardNavigation": "full",
+                "colorContrast": "high",
+                "visualIndicators": [
+                    "color",
+                    "icons",
+                    "text"
+                ],
+                "skipLinks": true,
+                "keyboardZoom": true,
+                "ariaLiveNotifications": true,
+                "formLabels": true,
+                "focusManagement": "strict",
+                "responsiveLayout": "fluid",
+                "searchFlexibility": "fuzzy",
+                "smartFilters": [
+                    "color_identity",
+                    "mana_value"
+                ],
+                "interactiveCharts": true,
+                "importFormat": "plain_text",
+                "groupDuplicates": true,
+                "autoSave": true
+            }
+        },
+        "non_accessible": {
+            "id": "a11y_fail",
+            "label": "No Accesible",
+            "path": "/home-no-accesible",
+            "flowSuffix": "-no-accesible",
+            "implementation_directives": "Romper accesibilidad: eliminar ARIA, deshabilitar navegación por teclado, forzar bajo contraste y quitar etiquetas de formulario.",
+            "settings": {
+                "altTextEnabled": false,
+                "keyboardNavigation": "mouse_only",
+                "colorContrast": "low",
+                "visualIndicators": [
+                    "color_only"
+                ],
+                "skipLinks": false,
+                "keyboardZoom": false,
+                "ariaLiveNotifications": false,
+                "formLabels": false,
+                "focusManagement": "none",
+                "responsiveLayout": "pixel_perfect_fixed",
+                "searchFlexibility": "fuzzy",
+                "smartFilters": [
+                    "color_identity"
+                ],
+                "interactiveCharts": true,
+                "importFormat": "plain_text",
+                "groupDuplicates": true,
+                "autoSave": true
+            }
+        },
+        "non_usable": {
+            "id": "ux_fail",
+            "label": "No Usable",
+            "path": "/home-no-usable",
+            "flowSuffix": "-no-usable",
+            "implementation_directives": "Romper UX: búsqueda por coincidencia exacta (fácil error), sin autoguardado, jerarquía visual confusa y carga de datos manual rígida.",
+            "settings": {
+                "altTextEnabled": true,
+                "keyboardNavigation": "full",
+                "colorContrast": "high",
+                "visualIndicators": [
+                    "color",
+                    "icons",
+                    "text"
+                ],
+                "skipLinks": true,
+                "keyboardZoom": true,
+                "ariaLiveNotifications": true,
+                "formLabels": true,
+                "focusManagement": "strict",
+                "responsiveLayout": "desktop_only_scaled",
+                "searchFlexibility": "exact_match_only",
+                "smartFilters": [
+                    "exact_color"
+                ],
+                "interactiveCharts": false,
+                "importFormat": "proprietary_rigid",
+                "groupDuplicates": false,
+                "autoSave": false,
+                "hiddenInfo": true,
+                "confusingHierarchy": true
+            }
+        }
+    }
+}

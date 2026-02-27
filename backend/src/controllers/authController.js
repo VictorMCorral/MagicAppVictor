@@ -36,6 +36,8 @@ const loginValidation = [
 /**
  * Controlador de registro de usuario
  */
+const normalizeInput = (value = '') => String(value || '').trim();
+
 const register = async (req, res) => {
   try {
     // Validar entrada
@@ -48,13 +50,15 @@ const register = async (req, res) => {
     }
 
     const { email, username, password } = req.body;
+    const normalizedEmail = normalizeInput(email).toLowerCase();
+    const normalizedUsername = normalizeInput(username).toLowerCase();
 
     // Verificar si el usuario ya existe
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: email.toLowerCase() },
-          { username: username.toLowerCase() }
+          { email: normalizedEmail },
+          { username: normalizedUsername }
         ]
       }
     });
@@ -74,8 +78,8 @@ const register = async (req, res) => {
     // Crear usuario
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
-        username: username.toLowerCase(),
+        email: normalizedEmail,
+        username: normalizedUsername,
         password: hashedPassword
       },
       select: {
@@ -125,7 +129,8 @@ const login = async (req, res) => {
     }
 
     const { email, password } = req.body;
-    const identifier = email.toLowerCase();
+    const identifier = normalizeInput(email).toLowerCase();
+    const sanitizedPassword = String(password || '');
 
     const isEmail = /.+@.+\..+/.test(identifier);
 
@@ -139,12 +144,12 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'No existe un usuario registrado con ese email'
+        message: 'No existe un usuario registrado con ese email o usuario'
       });
     }
 
     // Verificar contraseña
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(sanitizedPassword, user.password);
 
     if (!isValidPassword) {
       return res.status(401).json({

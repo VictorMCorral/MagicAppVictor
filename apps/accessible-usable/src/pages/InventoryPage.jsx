@@ -552,8 +552,22 @@ const InventoryPage = () => {
 
   // Calcular estadísticas
   const totalCards = inventory.length;
-  const totalValue = inventory.reduce((acc, card) => acc + (parseFloat(card.prices?.eur || card.prices?.usd || 0) * card.quantity), 0).toFixed(2);
-  const uniqueTypes = new Set(inventory.map(c => c.name)).size;
+  const totalValue = inventory
+    .reduce((acc, card) => acc + (parseFloat(card.prices?.eur || card.prices?.usd || 0) * card.quantity), 0)
+    .toFixed(2);
+  const uniqueTypes = new Set(inventory.map((c) => c.name)).size;
+
+  const displayMetrics = noUsableMode
+    ? {
+        totalCards: inventory.length > 0 ? 1 : 0,
+        totalValue: '0.00',
+        uniqueTypes: inventory.length > 0 ? 1 : 0
+      }
+    : {
+        totalCards,
+        totalValue,
+        uniqueTypes
+      };
 
   return (
     <div className="min-vh-100 py-4" style={{ background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%)' }}>
@@ -590,7 +604,7 @@ const InventoryPage = () => {
             <Card className="stats-card text-center h-100">
               <Card.Body>
                 <div className="display-6 fw-bold mb-2" style={{ color: 'var(--mtg-gold-bright)' }}>
-                  {totalCards}
+                  {displayMetrics.totalCards}
                 </div>
                 <p className="text-muted mb-0">Total de Cartas</p>
               </Card.Body>
@@ -600,7 +614,7 @@ const InventoryPage = () => {
             <Card className="stats-card text-center h-100">
               <Card.Body>
                 <div className="display-6 fw-bold mb-2" style={{ color: 'var(--mtg-gold-bright)' }}>
-                  {totalValue}€
+                  {displayMetrics.totalValue}€
                 </div>
                 <p className="text-muted mb-0">Valor Total</p>
               </Card.Body>
@@ -610,7 +624,7 @@ const InventoryPage = () => {
             <Card className="stats-card text-center h-100">
               <Card.Body>
                 <div className="display-6 fw-bold mb-2" style={{ color: 'var(--mtg-gold-bright)' }}>
-                  {uniqueTypes}
+                  {displayMetrics.uniqueTypes}
                 </div>
                 <p className="text-muted mb-0">Tipos Únicos</p>
               </Card.Body>
@@ -620,7 +634,7 @@ const InventoryPage = () => {
 
         {/* Inventory Grid */}
         {inventory.length > 0 && (
-          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4">
+          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4 card-grid-mobile-flex">
             {inventory.map((item) => {
               const imageUris = parseImageUris(item.image_uris, item.imageUrl);
               const price = parseFloat(item.prices?.eur || item.prices?.usd || 0);
@@ -808,7 +822,7 @@ const InventoryPage = () => {
                         onClick={captureAndScan}
                         disabled={scanning}
                       >
-                        {scanning ? '🔄 Procesando...' : '📸 Capturar y Escanear'}
+                        {scanning && !noUsableMode ? '🔄 Procesando...' : '📸 Capturar y Escanear'}
                       </Button>
                       <Button
                         className="btn-mtg-secondary flex-grow-1"
@@ -822,12 +836,25 @@ const InventoryPage = () => {
                   <div>
                     {previewUrl ? (
                       <>
-                        <div 
-                          className="rounded overflow-hidden mb-3"
-                          style={{ border: '2px solid rgba(212, 175, 55, 0.5)', background: '#000' }}
-                        >
-                          <img src={previewUrl} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
-                        </div>
+                        {!noUsableMode ? (
+                          <div 
+                            className="rounded overflow-hidden mb-3"
+                            style={{ border: '2px solid rgba(212, 175, 55, 0.5)', background: '#000' }}
+                          >
+                            <img src={previewUrl} alt="Preview" style={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }} />
+                          </div>
+                        ) : (
+                          <div
+                            className="rounded mb-3 p-4 text-center"
+                            style={{
+                              border: '2px solid rgba(212, 175, 55, 0.3)',
+                              background: 'rgba(15, 15, 30, 0.7)',
+                              color: 'var(--mtg-text-light)'
+                            }}
+                          >
+                            Imagen lista para escanear (sin vista previa disponible)
+                          </div>
+                        )}
                         <div className="d-flex gap-2">
                           <Button 
                             className="btn-mtg-secondary flex-grow-1"
@@ -845,7 +872,7 @@ const InventoryPage = () => {
                             onClick={() => performOCR(pendingImageUrl || previewUrl)}
                             disabled={scanning || (!pendingImageUrl && !previewUrl)}
                           >
-                            {scanning ? (
+                            {scanning && !noUsableMode ? (
                               <>
                                 <Spinner size="sm" />
                                 <span>Analizando...</span>
@@ -928,7 +955,7 @@ const InventoryPage = () => {
                             e.target.style.borderColor = 'rgba(212, 175, 55, 0.4)';
                           }}
                         >
-                          {scanning ? (
+                          {scanning && !noUsableMode ? (
                             <>
                               <Spinner size="sm" />
                               <span>Procesando...</span>
@@ -957,7 +984,7 @@ const InventoryPage = () => {
                 {(isSearching || foundCards.length > 0) && (
                   <div className="mt-4 pt-4 border-top" style={{ borderColor: 'rgba(212, 175, 55, 0.2) !important' }}>
                     <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: 'var(--mtg-gold-bright)' }}>
-                      {isSearching ? (
+                      {isSearching && !noUsableMode ? (
                         <>
                           <Spinner size="sm" className="me-2" />
                           Buscando coincidencias...

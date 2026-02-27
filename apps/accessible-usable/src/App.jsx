@@ -51,6 +51,15 @@ const AppContent = () => {
       body.classList.add('flow-accessible');
     }
 
+    const htmlRoot = document.documentElement;
+    if (mode === FLOW_MODES.NO_ACCESSIBLE) {
+      htmlRoot.setAttribute('aria-hidden', 'true');
+      htmlRoot.setAttribute('lang', '');
+    } else {
+      htmlRoot.removeAttribute('aria-hidden');
+      htmlRoot.setAttribute('lang', 'es');
+    }
+
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (viewportMeta) {
       if (mode === FLOW_MODES.NO_ACCESSIBLE) {
@@ -62,8 +71,14 @@ const AppContent = () => {
 
     const applyNoAccessibleA11yBreaks = () => {
       if (mode !== FLOW_MODES.NO_ACCESSIBLE) return;
-      document.querySelectorAll('[aria-live]').forEach((element) => element.removeAttribute('aria-live'));
+
+      const attributesToStrip = ['aria-live', 'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-controls', 'role'];
+      attributesToStrip.forEach((attribute) => {
+        document.querySelectorAll(`[${attribute}]`).forEach((element) => element.removeAttribute(attribute));
+      });
+
       document.querySelectorAll('img[alt]').forEach((image) => image.setAttribute('alt', ''));
+      document.querySelectorAll('[tabindex]').forEach((element) => element.removeAttribute('tabindex'));
     };
 
     applyNoAccessibleA11yBreaks();
@@ -83,15 +98,73 @@ const AppContent = () => {
     const mode = getFlowModeFromPath(location.pathname);
     if (mode !== FLOW_MODES.NO_ACCESSIBLE) return undefined;
 
-    const blockKeyboardNavigation = (event) => {
-      const key = event.key;
-      if (key === 'Tab') {
+    const trapFocusInsideNavbar = (event) => {
+      if (event.key !== 'Tab') return;
+
+      const navbar = document.querySelector('nav.navbar');
+      if (!navbar) return;
+
+      const focusable = Array.from(
+        navbar.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])')
+      ).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1 && element.offsetParent !== null);
+
+      if (focusable.length === 0) return;
+
+      event.preventDefault();
+      const currentIndex = focusable.indexOf(document.activeElement);
+      const direction = event.shiftKey ? -1 : 1;
+      const nextIndex = currentIndex === -1
+        ? (event.shiftKey ? focusable.length - 1 : 0)
+        : (currentIndex + direction + focusable.length) % focusable.length;
+
+      focusable[nextIndex].focus();
+    };
+
+    window.addEventListener('keydown', trapFocusInsideNavbar, true);
+    return () => window.removeEventListener('keydown', trapFocusInsideNavbar, true);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const mode = getFlowModeFromPath(location.pathname);
+    if (mode !== FLOW_MODES.NO_ACCESSIBLE) return undefined;
+
+    const preventGestureZoom = (event) => {
+      event.preventDefault();
+    };
+
+    const preventCtrlWheelZoom = (event) => {
+      if (event.ctrlKey || event.metaKey) {
         event.preventDefault();
       }
     };
 
-    window.addEventListener('keydown', blockKeyboardNavigation, true);
-    return () => window.removeEventListener('keydown', blockKeyboardNavigation, true);
+    const preventKeyboardZoom = (event) => {
+      if ((event.ctrlKey || event.metaKey) && ['+', '-', '=', '0'].includes(event.key)) {
+        event.preventDefault();
+      }
+    };
+
+    const preventPinchZoom = (event) => {
+      if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('gesturestart', preventGestureZoom, { passive: false });
+    window.addEventListener('gesturechange', preventGestureZoom, { passive: false });
+    window.addEventListener('gestureend', preventGestureZoom, { passive: false });
+    window.addEventListener('wheel', preventCtrlWheelZoom, { passive: false });
+    window.addEventListener('keydown', preventKeyboardZoom, true);
+    document.addEventListener('touchmove', preventPinchZoom, { passive: false });
+
+    return () => {
+      window.removeEventListener('gesturestart', preventGestureZoom);
+      window.removeEventListener('gesturechange', preventGestureZoom);
+      window.removeEventListener('gestureend', preventGestureZoom);
+      window.removeEventListener('wheel', preventCtrlWheelZoom);
+      window.removeEventListener('keydown', preventKeyboardZoom, true);
+      document.removeEventListener('touchmove', preventPinchZoom);
+    };
   }, [location.pathname]);
 
   useEffect(() => {

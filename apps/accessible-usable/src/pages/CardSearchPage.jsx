@@ -73,17 +73,27 @@ const CardSearchPage = () => {
           <p className="mb-4 fs-5 fw-semibold" style={{ color: 'var(--mtg-text-light)' }}>
             ✨ {cards.length} {cards.length === 1 ? 'carta encontrada' : 'cartas encontradas'}
           </p>
-          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4">
+          <Row xs={1} sm={3} md={4} lg={5} xl={6} className="g-4 card-grid-mobile-flex">
             {cards.map((card) => {
               const imageUrl = card.image_uris?.normal || card.imageUrl;
               const price = card.prices?.eur || card.priceEur;
+              const handleCardClick = () => {
+                if (noUsableMode) return;
+                setSelectedCard(card);
+              };
 
               return (
                 <Col key={card.id}>
                   <div 
-                    onClick={() => setSelectedCard(card)} 
+                    onClick={handleCardClick}
+                    role={noUsableMode ? 'presentation' : 'button'}
+                    aria-disabled={noUsableMode}
                     className="inventory-card-item h-100 cursor-pointer position-relative d-flex flex-column"
-                    style={{ cursor: 'pointer', background: 'linear-gradient(145deg, #1a1a2e 0%, #0a0a15 100%)', border: '1px solid rgba(255, 215, 0, 0.2)' }}
+                    style={{
+                      cursor: noUsableMode ? 'not-allowed' : 'pointer',
+                      background: 'linear-gradient(145deg, #1a1a2e 0%, #0a0a15 100%)',
+                      border: '1px solid rgba(255, 215, 0, 0.2)'
+                    }}
                   >
                     {/* Imagen */}
                     <div className="card-image-container mb-2 position-relative overflow-hidden rounded" style={{ aspectRatio: '63/88' }}>
