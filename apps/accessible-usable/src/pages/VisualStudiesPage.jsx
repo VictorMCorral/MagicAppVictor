@@ -5,6 +5,14 @@ import { visualStudiesVideos, visualStudySections } from '../data/visualStudies'
 
 const VIDEO_BASE = `${process.env.PUBLIC_URL}/videos/visual-studies`;
 
+const getVideoSources = (filename = '') => {
+  const baseName = filename.replace(/\.(mkv|mp4)$/i, '');
+  return [
+    { src: `${VIDEO_BASE}/${baseName}.mp4`, type: 'video/mp4' },
+    { src: `${VIDEO_BASE}/${baseName}.mkv`, type: 'video/x-matroska' }
+  ];
+};
+
 const heroVideo = visualStudiesVideos.find((entry) => entry.number === 1);
 
 const VISUAL_SECTIONS = visualStudySections.map((section) => ({
@@ -33,7 +41,9 @@ const VisualStudiesPage = () => {
             <Col lg={6}>
               <div className="ratio ratio-16x9 rounded-start overflow-hidden">
                 <video controls preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-                  <source src={heroVideo ? `${VIDEO_BASE}/${heroVideo.filename}` : ''} />
+                  {heroVideo && getVideoSources(heroVideo.filename).map((source) => (
+                    <source key={source.src} src={source.src} type={source.type} />
+                  ))}
                   Tu navegador no soporta video HTML5.
                 </video>
               </div>
@@ -61,7 +71,9 @@ const VisualStudiesPage = () => {
                   <Card className="h-100 card-mtg shadow-sm">
                     <div className="ratio ratio-16x9 rounded-top overflow-hidden">
                       <video controls preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover' }}>
-                        <source src={`${VIDEO_BASE}/${video.filename}`} />
+                        {getVideoSources(video.filename).map((source) => (
+                          <source key={source.src} src={source.src} type={source.type} />
+                        ))}
                         Tu navegador no soporta video HTML5.
                       </video>
                     </div>
