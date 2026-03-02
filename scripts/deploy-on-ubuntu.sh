@@ -136,10 +136,15 @@ deploy_frontend() {
   sudo rsync -a --delete --exclude 'videos/visual-studies/***' build/ "$FRONTEND_BUILD_DIR"/
   sudo mkdir -p "$FRONTEND_BUILD_DIR/videos/visual-studies"
   if [ -d "$REMOTE_VIDEOS_DIR" ]; then
-    log "Publicando videos de estudios visuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies"
-    # --checksum fuerza actualización aunque el nombre sea el mismo y coincidan tamaño/mtime.
-    # --delete evita que queden archivos antiguos en destino.
-    sudo rsync -a --delete --checksum "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
+    video_count=$(find "$REMOTE_VIDEOS_DIR" -maxdepth 1 -type f \( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) | wc -l | tr -d ' ')
+    if [ "$video_count" -gt 0 ]; then
+      log "Publicando ${video_count} videos de estudios visuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies"
+      # --checksum fuerza actualización aunque el nombre sea el mismo y coincidan tamaño/mtime.
+      # --delete evita que queden archivos antiguos en destino.
+      sudo rsync -a --delete --checksum "$REMOTE_VIDEOS_DIR"/ "$FRONTEND_BUILD_DIR/videos/visual-studies"/
+    else
+      log "WARNING: ${REMOTE_VIDEOS_DIR} existe pero no contiene videos (.mp4/.mkv/.webm). Se conservan los videos actuales publicados."
+    fi
   else
     log "WARNING: no existe ${REMOTE_VIDEOS_DIR}. Se mantienen los videos actuales en ${FRONTEND_BUILD_DIR}/videos/visual-studies."
   fi

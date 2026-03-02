@@ -275,7 +275,12 @@ run_sudo mkdir -p '__FRONTEND_BUILD__'
 run_sudo rsync -a --delete --exclude 'videos/visual-studies/***' build/ '__FRONTEND_BUILD__'/
 run_sudo mkdir -p '__FRONTEND_BUILD__/videos/visual-studies'
 if [ -d '__REMOTE_VIDEOS_DIR__' ]; then
-    run_sudo rsync -a --delete --checksum '__REMOTE_VIDEOS_DIR__'/ '__FRONTEND_BUILD__/videos/visual-studies'/
+    VIDEO_COUNT=$(find '__REMOTE_VIDEOS_DIR__' -maxdepth 1 -type f \( -iname '*.mp4' -o -iname '*.mkv' -o -iname '*.webm' \) | wc -l | tr -d ' ')
+    if [ "$VIDEO_COUNT" -gt 0 ]; then
+        run_sudo rsync -a --delete --checksum '__REMOTE_VIDEOS_DIR__'/ '__FRONTEND_BUILD__/videos/visual-studies'/
+    else
+        echo "WARNING: __REMOTE_VIDEOS_DIR__ existe pero no contiene videos (.mp4/.mkv/.webm). Se conservan los videos actuales publicados." >&2
+    fi
 else
     echo "WARNING: no existe __REMOTE_VIDEOS_DIR__. Se mantienen los videos actuales en __FRONTEND_BUILD__/videos/visual-studies." >&2
 fi

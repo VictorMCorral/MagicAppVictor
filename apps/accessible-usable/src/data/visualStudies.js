@@ -212,15 +212,15 @@ export const visualStudiesVideos = [
   ),
   video(
     30,
-    'Video 30 — Métricas de inventario congeladas',
-    'Los KPIs siempre muestran 1 carta y 0 € aunque la colección crezca.',
+    'Video 30 — Sin detalle al tocar cartas en la búsqueda',
+    'En -no-usable las tarjetas del buscador dejan de abrir el modal con información.',
     '31_metricas.mkv',
     'usabilidad'
   ),
   video(
     31,
-    'Video 31 — Sin detalle al tocar cartas en la búsqueda',
-    'En -no-usable las tarjetas del buscador dejan de abrir el modal con información.',
+    'Video 31 — Métricas de inventario congeladas',
+    'Los KPIs siempre muestran 1 carta y 0 € aunque la colección crezca.',
     '30_detalle_Carta.mkv',
     'usabilidad'
   )
